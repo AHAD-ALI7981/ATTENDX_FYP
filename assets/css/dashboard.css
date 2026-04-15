@@ -1,0 +1,428 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+/* ============== VARIABLES ============== */
+:root {
+  --glass-bg: rgba(15, 23, 42, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --card-bg: rgba(15, 23, 42, 0.7);
+  --card-hover-bg: rgba(15, 23, 42, 0.8);
+  --input-bg: rgba(255, 255, 255, 0.12);
+  --input-focus-bg: rgba(255, 255, 255, 0.2);
+  --white: #ffffff;
+  --white-soft: rgba(255, 255, 255, 0.85);
+  --white-muted: rgba(255, 255, 255, 0.6);
+  --accent: #60a5fa;
+  --accent-hover: #93c5fd;
+  --danger: #f87171;
+  --danger-hover: #fca5a5;
+  --success: #34d399;
+  --purple: #a78bfa;
+  --font: "Poppins", sans-serif;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+/* ============== RESET ============== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============== BODY ============== */
+body.dashboard-mode {
+  font-family: var(--font);
+  background-image: url('../img/login-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-color: #1a1a2e;
+  color: var(--white);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ============== LAYOUT ============== */
+#app-dashboard {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 25px 20px;
+}
+
+/* ============== HEADER ============== */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  padding: 20px 30px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  margin-bottom: 30px;
+}
+
+.dashboard-header h2 {
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: var(--white);
+  letter-spacing: 0.5px;
+}
+
+/* ============== BUTTONS ============== */
+button {
+  font-family: var(--font);
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.logout-btn {
+  background: rgba(248, 113, 113, 0.2);
+  color: var(--danger);
+  padding: 10px 22px;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.logout-btn:hover {
+  background: rgba(248, 113, 113, 0.35);
+  color: var(--danger-hover);
+  transform: translateY(-1px);
+}
+
+.action-btn {
+  background: linear-gradient(135deg, var(--accent), #818cf8);
+  color: var(--white);
+  padding: 12px 24px;
+  width: 100%;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.action-btn:hover {
+  background: linear-gradient(135deg, var(--accent-hover), #a5b4fc);
+  box-shadow: 0 6px 20px rgba(96, 165, 250, 0.4);
+  transform: translateY(-2px);
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--white-soft);
+  padding: 10px 20px;
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(8px);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+/* ============== SECTION HEADINGS ============== */
+.role-section h3 {
+  margin-bottom: 22px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--white);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.role-section>h4,
+.dashboard-content h4[style] {
+  color: var(--white-soft) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ============== CARDS ============== */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  background: var(--card-hover-bg);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.card h4 {
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  color: var(--white);
+  font-weight: 600;
+}
+
+.hint {
+  color: var(--white-muted);
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+/* ============== FORMS & INPUTS ============== */
+
+.input-group {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.input-group input,
+.input-group select {
+  flex: 1;
+  min-width: 180px;
+}
+
+input[type="text"],
+input[type="date"],
+select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font);
+  font-size: 0.95rem;
+  color: var(--white);
+  background: var(--input-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]::placeholder {
+  color: var(--white-muted);
+}
+
+input[type="text"]:focus,
+input[type="date"]:focus,
+select:focus {
+  border-color: var(--accent);
+  background: var(--input-focus-bg);
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.25);
+}
+
+select option {
+  background: #1e293b;
+  color: var(--white);
+}
+
+label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: inline-block;
+  color: var(--white-soft) !important;
+}
+
+/* ============== TABLES ============== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+th {
+  background: rgba(15, 23, 42, 0.5);
+  font-weight: 600;
+  color: var(--white-soft);
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 1px;
+}
+
+td {
+  color: var(--white-soft);
+}
+
+tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* ============== CAMERA & VIDEO ============== */
+.camera-box {
+  background: rgba(15, 23, 42, 0.5);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.camera-box p {
+  color: var(--white-soft);
+  margin-bottom: 10px;
+}
+
+.camera-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 15px 0;
+  flex-wrap: wrap;
+}
+
+video {
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--glass-border);
+  background-color: #000;
+  margin: 10px auto;
+  display: block;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* ============== ATTENDANCE SPLIT ============== */
+.attendance-split-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+
+.attendance-camera-box {
+  text-align: center;
+}
+
+.manual-list-scroll {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  padding-right: 5px;
+}
+
+.manual-list-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.manual-list-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.manual-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* ============== COURSE LIST ============== */
+.course-list-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+/* ============== STUDENT ATTENDANCE RESULT ============== */
+#attendance-percentage {
+  color: var(--white) !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#attendance-details {
+  color: var(--white-muted) !important;
+}
+
+#scan-result {
+  color: var(--white-soft);
+}
+
+#enroll-face-status {
+  color: var(--danger) !important;
+}
+
+/* ============== UTILITIES ============== */
+.hidden {
+  display: none !important;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  margin: 15px 0;
+}
+
+/* ============== RESPONSIVE ============== */
+@media (max-width: 768px) {
+  .attendance-split-container {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+    padding: 18px 20px;
+  }
+
+  .dashboard-header h2 {
+    font-size: 1.2rem;
+  }
+
+  #app-dashboard {
+    padding: 15px 12px;
+  }
+
+  .card {
+    padding: 20px 18px;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-group input,
+  .input-group select {
+    min-width: 100%;
+  }
+
+  .role-section h3 {
+    font-size: 1.4rem;
+  }
+
+  .course-list-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h2 {
+    font-size: 1rem;
+  }
+
+  .card {
+    padding: 16px 14px;
+  }
+
+  .action-btn {
+    padding: 10px 18px;
+    font-size: 0.9rem;
+  }
+}

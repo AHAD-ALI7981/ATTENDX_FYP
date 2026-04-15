@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard</title>
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+
+<body class="dashboard-mode">
+    <div id="app-dashboard">
+        <div class="dashboard-header">
+            <h2 id="welcome-msg">Welcome, TEACHER</h2>
+            <button class="logout-btn">Logout</button>
+        </div>
+        <div class="dashboard-content">
+            <div id="teacher-section" class="role-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3>Teacher Panel</h3>
+                    <button class="secondary-btn">📊 View All Classes
+                        Report</button>
+                </div>
+
+                <div class="card">
+                    <h4>Your Allocated Courses</h4>
+                    <p class="hint">Click on a course to manage attendance</p>
+                    <div id="teacher-course-list" class="course-list-container"></div>
+                </div>
+
+                <div id="teacher-actions-area">
+                    <div class="card" style="border-left: 5px solid #3498db;">
+                        <h4>1. Enroll Student</h4>
+                        <div class="input-group">
+                            <input type="text" id="enroll-student-id" placeholder="Student ID (e.g. S01)">
+                            <input type="text" id="enroll-student-name" placeholder="Student Name">
+                        </div>
+                        <div class="camera-box">
+                            <p>Facial Registration:</p>
+                            <video id="enroll-video" class="hidden" autoplay playsinline></video>
+                            <div class="camera-controls">
+                                <button id="btn-start-enroll-cam" class="secondary-btn">Open Camera</button>
+                                <button id="btn-capture-enroll-face" class="secondary-btn hidden">Capture Face</button>
+                            </div>
+                            <p id="enroll-face-status" style="color:red; font-size:0.9em;">* Face Scan Required</p>
+                        </div>
+                        <button class="action-btn">Complete Enrollment</button>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid #e74c3c;">
+                        <h4>2. Facial Scan Attendance</h4>
+                        <p class="hint">Auto-mark attendance via camera.</p>
+                        <video id="camera-stream" autoplay playsinline></video>
+                        <button class="action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">SCAN
+                            FACE</button>
+                        <p id="scan-result" style="margin-top: 10px; min-height: 20px;"></p>
+                    </div>
+
+                    <div class="card" style="border-left: 5px solid #f39c12;">
+                        <h4>3. Manual Override</h4>
+                        <p class="hint">Mark students as Present or Absent.</p>
+                        <div id="manual-student-list" class="manual-list-scroll"></div>
+                        <button class="action-btn">Save Manual Attendance</button>
+                    </div>
+
+                    <div class="card">
+                        <h4>4. Reports</h4>
+                        <div class="input-group" style="align-items: center;">
+                            <label>Daily Sheet Date:</label>
+                            <input type="date" id="report-date-picker">
+                            <button class="action-btn">View Daily Sheet</button>
+                        </div>
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+                        <button class="action-btn">View Detailed Course
+                            Report</button>
+                        <div id="teacher-report-area" style="overflow-x:auto; margin-top: 15px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/teacher.js"></script>
+</body>
+
+</html>

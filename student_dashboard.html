@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+
+<body class="dashboard-mode">
+    <div id="app-dashboard">
+        <div class="dashboard-header">
+            <h2 id="welcome-msg">Welcome, STUDENT</h2>
+            <button class="logout-btn">Logout</button>
+        </div>
+        <div class="dashboard-content">
+            <div id="student-section" class="role-section">
+                <h3>Student Portal</h3>
+                <div class="card">
+                    <p class="hint" style="margin-bottom: 15px;">Check your attendance percentage for your enrolled subjects.</p>
+                    <label style="color:#333">Select Subject:</label>
+                    <select id="student-course-select"></select>
+                    <br><br>
+                    <button class="action-btn">Check Attendance</button>
+                </div>
+
+                <div id="student-result-area">
+                    <div class="card" style="text-align: center; border-left: 5px solid #8e44ad;">
+                        <h4>Attendance Percentage</h4>
+                        <h1 id="attendance-percentage" style="font-size: 4em; color: #2c3e50; margin: 10px 0;">0%</h1>
+                        <p id="attendance-details" style="color:#666;"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/student.js"></script>
+</body>
+
+</html>

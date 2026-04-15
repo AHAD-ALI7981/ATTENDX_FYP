@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="assets/css/dashboard.css">
+</head>
+
+<body class="dashboard-mode">
+    <div id="app-dashboard">
+        <div class="dashboard-header">
+            <h2 id="welcome-msg">Welcome, ADMIN</h2>
+            <button class="logout-btn">Logout</button>
+        </div>
+        <div class="dashboard-content">
+            <div id="admin-section" class="role-section">
+                <h3>Admin Control Panel</h3>
+                
+                <!-- User Management Section -->
+                <div class="card form-group">
+                    <h4>Create Teacher or Student Account</h4>
+                    <div class="input-group">
+                        <input type="text" id="admin-user-username" placeholder="Username (e.g., student101)">
+                        <input type="password" id="admin-user-password" placeholder="Password">
+                        <select id="admin-user-role" style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <button class="action-btn" id="btn-create-user">Create User</button>
+                </div>
+
+                <div class="card form-group">
+                    <h4>Add Course & Allot Teacher</h4>
+                    <div class="input-group">
+                        <input type="text" id="admin-course-class" placeholder="Class (e.g., Grade 10-A)">
+                        <input type="text" id="admin-course-name" placeholder="Subject (e.g., Math)">
+                        <input type="text" id="admin-teacher-name" placeholder="Teacher Username">
+                    </div>
+                    <button class="action-btn" id="btn-add-course">Allot & Add</button>
+                </div>
+
+                <div class="card">
+                    <h4>Allocated Courses</h4>
+                    <table id="admin-course-table">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Subject</th>
+                                <th>Teacher</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/admin.js"></script>
+</body>
+
+</html>
