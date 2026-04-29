@@ -6,16 +6,38 @@ from datetime import date
 # ---- Auth ----
 class RegisterRequest(BaseModel):
     username: str
+    email: Optional[str] = None
     password: str
     role: str  # admin, teacher, student
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
 
 class UserResponse(BaseModel):
     id: int
     username: str
+    email: Optional[str] = None
     role: str
+    plain_password: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+class UserUpdateRequest(BaseModel):
+    email: Optional[str] = None
+    role: Optional[str] = None
+    password: Optional[str] = None
+
+class PaginatedUserResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+    users: List[UserResponse]
 
 class LoginRequest(BaseModel):
     username: str
@@ -27,6 +49,53 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     role: str
     username: str
+
+
+# ---- Enrollment & Attendance ----
+class EnrollmentCreate(BaseModel):
+    student_id: str
+    student_name: str
+    course_id: int
+
+class EnrollmentResponse(BaseModel):
+    id: int
+    student_id: str
+    student_name: str
+    course_id: int
+    created_at: date
+
+    class Config:
+        from_attributes = True
+
+# ---- New Management Schemas ----
+class ClassCreate(BaseModel):
+    class_id: str
+    class_name: str
+    teacher_id: Optional[int] = None
+
+class ClassResponse(BaseModel):
+    id: int
+    class_id: str
+    class_name: str
+    teacher_id: Optional[int] = None
+    teacher_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class CourseDefCreate(BaseModel):
+    course_id: str
+    course_description: Optional[str] = None
+    credit_hours: int = 3
+
+class CourseDefResponse(BaseModel):
+    id: int
+    course_id: str
+    course_description: Optional[str] = None
+    credit_hours: int
+
+    class Config:
+        from_attributes = True
 
 
 # ---- Admin: Courses ----

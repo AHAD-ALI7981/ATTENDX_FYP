@@ -12,6 +12,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!isAuthenticated) return;
 
     document.querySelector(".logout-btn").addEventListener("click", logout);
+    const sidebarLogout = document.querySelector(".sidebar-logout");
+    if(sidebarLogout) sidebarLogout.addEventListener("click", logout);
+
+    // Tab switching logic
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            // Remove active class from all tabs and buttons
+            navItems.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(tab => tab.classList.remove('active'));
+
+            // Add active class to clicked button and target tab
+            item.classList.add('active');
+            const targetId = item.getAttribute('data-target');
+            const targetTab = document.getElementById(targetId);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+        });
+    });
 
     loadMyCourses();
     setupEnrollmentCamera();

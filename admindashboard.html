@@ -5,60 +5,251 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 
 <body class="dashboard-mode">
-    <div id="app-dashboard">
-        <div class="dashboard-header">
-            <h2 id="welcome-msg">Welcome, ADMIN</h2>
-            <button class="logout-btn">Logout</button>
-        </div>
-        <div class="dashboard-content">
-            <div id="admin-section" class="role-section">
-                <h3>Admin Control Panel</h3>
-                
-                <!-- User Management Section -->
-                <div class="card form-group">
-                    <h4>Create Teacher or Student Account</h4>
-                    <div class="input-group">
-                        <input type="text" id="admin-user-username" placeholder="Username (e.g., student101)">
-                        <input type="password" id="admin-user-password" placeholder="Password">
-                        <select id="admin-user-role" style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
-                            <option value="student">Student</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="admin">Admin</option>
-                        </select>
+
+
+    <div id="app-layout" class="dashboard-layout" style="padding-top: 0;">
+        <!-- Sidebar -->
+        <aside class="sidebar" style="border-top-left-radius: 0;">
+            <div class="sidebar-header" style="margin-top: 10px;">
+                <h2>Admin Panel</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-target="manage-users-tab">
+                    <i class="ri-group-line"></i> Manage Users
+                </button>
+                <button class="nav-item" data-target="create-user-tab">
+                    <i class="ri-user-add-line"></i> Create User
+                </button>
+                <button class="nav-item" data-target="allocated-courses-tab">
+                    <i class="ri-book-2-line"></i> Allocated Courses
+                </button>
+                <button class="nav-item" data-target="add-course-tab">
+                    <i class="ri-folder-add-line"></i> Allot Course
+                </button>
+                <button class="nav-item" data-target="create-class-tab">
+                    <i class="ri-community-line"></i> Create Class
+                </button>
+                <button class="nav-item" data-target="create-course-tab">
+                    <i class="ri-book-read-line"></i> Create Course
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn sidebar-logout"><i class="ri-logout-box-r-line"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-header" style="margin-bottom: 30px;">
+                <h2 id="welcome-msg">Welcome, ADMIN</h2>
+            </div>
+            <div class="dashboard-content" style="margin-top: 0;">
+                <!-- Manage Users Tab -->
+                <div id="manage-users-tab" class="tab-content active">
+                    <div class="card">
+                        <h4>Manage Users</h4>
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <input type="text" id="admin-user-search" placeholder="Search by username or email...">
+                            <select id="admin-user-filter-role"
+                                style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                                <option value="all">All Roles</option>
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
+                        </div>
+                        <div style="overflow-x: auto;">
+                            <table id="admin-users-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Password</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-controls"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <button id="btn-prev-page" class="secondary-btn" disabled>Previous</button>
+                            <span id="page-info" style="color: var(--white-soft); font-size: 0.9rem;">Page 1 of 1</span>
+                            <button id="btn-next-page" class="secondary-btn" disabled>Next</button>
+                        </div>
                     </div>
-                    <button class="action-btn" id="btn-create-user">Create User</button>
                 </div>
 
-                <div class="card form-group">
-                    <h4>Add Course & Allot Teacher</h4>
-                    <div class="input-group">
-                        <input type="text" id="admin-course-class" placeholder="Class (e.g., Grade 10-A)">
-                        <input type="text" id="admin-course-name" placeholder="Subject (e.g., Math)">
-                        <input type="text" id="admin-teacher-name" placeholder="Teacher Username">
+                <!-- Create User Tab -->
+                <div id="create-user-tab" class="tab-content">
+                    <div style="display: flex; flex-direction: column; gap: 20px; max-width: 1200px;">
+                        <!-- Create Teacher Card -->
+                        <div class="card form-group" style="border-left: 5px solid #3498db; margin: 0;">
+                            <h4>Create Teacher Account</h4>
+                            <div class="input-group">
+                                <input type="text" id="admin-teacher-username"
+                                    placeholder="Username (e.g., teacher_math)">
+                                <div style="display: flex; gap: 5px; flex: 1;">
+                                    <input type="text" id="admin-teacher-password" placeholder="Password"
+                                        style="min-width: 0;">
+                                    <button class="secondary-btn" id="btn-generate-teacher-password"
+                                        style="padding: 12px; min-width: auto;" title="Generate 8-char Password">
+                                        <i class="ri-key-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="action-btn" id="btn-create-teacher">Create Teacher</button>
+                        </div>
+
+                        <!-- Create Student Card -->
+                        <div class="card form-group" style="border-left: 5px solid #e74c3c; margin: 0;">
+                            <h4>Create Student Account</h4>
+                            <div class="input-group">
+                                <input type="text" id="admin-student-username"
+                                    placeholder="Username (e.g., student101)">
+                                <div style="display: flex; gap: 5px; flex: 1;">
+                                    <input type="text" id="admin-student-password" placeholder="Password"
+                                        style="min-width: 0;">
+                                    <button class="secondary-btn" id="btn-generate-student-password"
+                                        style="padding: 12px; min-width: auto;" title="Generate 8-char Password">
+                                        <i class="ri-key-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button class="action-btn" id="btn-create-student">Create Student</button>
+                        </div>
                     </div>
-                    <button class="action-btn" id="btn-add-course">Allot & Add</button>
                 </div>
 
-                <div class="card">
-                    <h4>Allocated Courses</h4>
-                    <table id="admin-course-table">
-                        <thead>
-                            <tr>
-                                <th>Class</th>
-                                <th>Subject</th>
-                                <th>Teacher</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <!-- Allocated Courses Tab -->
+                <div id="allocated-courses-tab" class="tab-content">
+                    <div class="card">
+                        <h4>Allocated Courses</h4>
+                        <table id="admin-course-table">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Subject</th>
+                                    <th>Teacher</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
+
+                <!-- Add Course Tab -->
+                <div id="add-course-tab" class="tab-content">
+                    <div class="card form-group">
+                        <h4>Add Course & Allot Teacher</h4>
+                        <div class="input-group">
+                            <input type="text" id="admin-course-class" placeholder="Class (e.g., Grade 10-A)">
+                            <input type="text" id="admin-course-name" placeholder="Subject (e.g., Math)">
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <p style="margin-bottom: 10px; color: var(--white-soft); font-size: 0.9rem;">Select Teacher:</p>
+                            <select id="admin-teacher-select" class="card" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); cursor: pointer;">
+                                <option value="">-- Choose a Teacher --</option>
+                            </select>
+                        </div>
+                        <button class="action-btn" id="btn-add-course">Allot & Add</button>
+                    </div>
+                </div>
+
+                <!-- Create Class Tab -->
+                <div id="create-class-tab" class="tab-content">
+                    <div class="card form-group">
+                        <h4>Create New Class</h4>
+                        <div class="input-group">
+                            <input type="text" id="admin-class-id" placeholder="Class ID (e.g., CS-101)">
+                            <input type="text" id="admin-class-name" placeholder="Class Name (e.g., Grade 10-A)">
+                        </div>
+                        <div style="margin: 20px 0;">
+                            <p style="margin-bottom: 10px; color: var(--white-soft); font-size: 0.9rem;">Assign Teacher:</p>
+                            <select id="admin-class-teacher-select" class="card" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); cursor: pointer;">
+                                <option value="">-- Choose a Teacher --</option>
+                            </select>
+                        </div>
+                        <button class="action-btn" id="btn-create-class">Create Class</button>
+                    </div>
+                    <div class="card" style="margin-top: 30px;">
+                        <h4>Existing Classes</h4>
+                        <table id="admin-classes-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Teacher</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Create Course Tab -->
+                <div id="create-course-tab" class="tab-content">
+                    <div class="card form-group">
+                        <h4>Create New Course Definition</h4>
+                        <div class="input-group" style="flex-direction: column; gap: 15px;">
+                            <input type="text" id="admin-course-def-id" placeholder="Course ID (e.g., MTH101)">
+                            <input type="number" id="admin-course-def-credits" placeholder="Credit Hours" value="3">
+                            <textarea id="admin-course-def-desc" placeholder="Course Description" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); min-height: 80px;"></textarea>
+                        </div>
+                        <button class="action-btn" id="btn-create-course-def" style="margin-top: 20px;">Create Course Definition</button>
+                    </div>
+                    <div class="card" style="margin-top: 30px;">
+                        <h4>Available Courses</h4>
+                        <table id="admin-course-defs-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Description</th>
+                                    <th>Credits</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal-overlay hidden">
+        <div class="modal-content card" style="max-width: 400px; margin: 10vh auto;">
+            <h4>Edit User</h4>
+            <div class="input-group" style="flex-direction: column;">
+                <input type="hidden" id="edit-user-id">
+                <input type="email" id="edit-user-email" placeholder="Email Address">
+                <div style="display: flex; gap: 5px; width: 100%;">
+                    <input type="text" id="edit-user-password" placeholder="New Password" style="flex-grow: 1;">
+                    <button class="secondary-btn" id="btn-generate-edit-password" style="padding: 12px; min-width: auto;" title="Generate Password">
+                        <i class="ri-key-line"></i>
+                    </button>
+                </div>
+                <select id="edit-user-role"
+                    style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="action-btn" id="btn-save-user">Save</button>
+                <button class="secondary-btn" id="btn-cancel-edit" style="width: 100%;">Cancel</button>
             </div>
         </div>
     </div>
+
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/admin.js"></script>
 </body>

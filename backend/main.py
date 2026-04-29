@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
 
 from database import engine, Base, SessionLocal
 from models import User
@@ -18,8 +19,17 @@ Base.metadata.create_all(bind=engine)
 
 # Inject a default admin on startup so we don't get locked out
 with SessionLocal() as db:
+    # Attempt to add email column if it doesn't exist (basic migration)
+    try:
+        db.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(100) UNIQUE"))
+        db.commit()
+        print("Added email column to users table.")
+    except Exception as e:
+        # Column likely already exists or using SQLite which doesn't support this easily
+        db.rollback()
+
     if not db.query(User).filter(User.username == "admin").first():
-        db.add(User(username="admin", password_hash=hash_password("admin123"), role="admin"))
+        db.add(User(username="admin", email="admin@example.com", password_hash=hash_password("admin123"), role="admin"))
         db.add(User(username="teacher", password_hash=hash_password("teacher123"), role="teacher"))
         db.commit()
         print("Created default admin and teacher accounts.")

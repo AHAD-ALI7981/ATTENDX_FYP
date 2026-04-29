@@ -23,9 +23,30 @@ def create_access_token(username: str, role: str) -> str:
     payload = {
         "sub": username,
         "role": role,
+        "type": "access",
         "exp": expire,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def create_password_reset_token(email: str) -> str:
+    """Creates a short-lived token specifically for password resets."""
+    expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    payload = {
+        "sub": email,
+        "type": "reset",
+        "exp": expire,
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_password_reset_token(token: str) -> str:
+    """Verifies a reset token and returns the email. Raises Exception if invalid."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "reset":
+            raise HTTPException(status_code=400, detail="Invalid token type")
+        return payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
 
 def get_current_user(request: Request) -> dict:
     """Extracts JWT exclusively from the secure HttpOnly cookie."""
@@ -37,6 +58,11 @@ def get_current_user(request: Request) -> dict:
         )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") == "reset":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Reset tokens cannot be used as access tokens",
+            )
         return payload
     except JWTError:
         raise HTTPException(
