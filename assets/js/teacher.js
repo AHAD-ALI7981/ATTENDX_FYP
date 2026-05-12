@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     loadMyCourses();
+    loadStudentsList();
     setupEnrollmentCamera();
     setupButtons();
 });
@@ -49,6 +50,18 @@ async function loadMyCourses() {
         const courses = await res.json();
         const container = document.getElementById("teacher-course-list");
         container.innerHTML = "";
+
+        // Populate enroll course dropdown
+        const enrollSelect = document.getElementById("enroll-course-select");
+        if (enrollSelect) {
+            enrollSelect.innerHTML = '<option value="" disabled selected>Select Course</option>';
+            courses.forEach((c) => {
+                const opt = document.createElement("option");
+                opt.value = c.id;
+                opt.textContent = `${c.class_name} — ${c.subject}`;
+                enrollSelect.appendChild(opt);
+            });
+        }
 
         if (courses.length === 0) {
             container.innerHTML = '<p class="hint">No courses assigned yet. Ask admin to allot courses.</p>';
@@ -76,8 +89,30 @@ function selectCourse(courseId, btnElement) {
     });
     btnElement.style.background = "rgba(96, 165, 250, 0.3)";
     btnElement.style.color = "#fff";
-    document.getElementById("teacher-actions-area").style.display = "block";
     loadEnrolledStudents();
+}
+
+
+// ==================== STUDENTS LIST ====================
+async function loadStudentsList() {
+    try {
+        const res = await apiFetch("/api/teacher/students-list");
+        if (!res.ok) return;
+
+        const students = await res.json();
+        const select = document.getElementById("enroll-student-select");
+        if (!select) return;
+
+        select.innerHTML = '<option value="" disabled selected>Select Student</option>';
+        students.forEach((s) => {
+            const opt = document.createElement("option");
+            opt.value = s.id;
+            opt.textContent = s.username;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to load students list:", err);
+    }
 }
 
 
@@ -147,17 +182,20 @@ function setupButtons() {
 }
 
 async function enrollStudent() {
-    if (!selectedCourseId) {
+    const enrollCourseSelect = document.getElementById("enroll-course-select");
+    const enrollCourseId = enrollCourseSelect ? enrollCourseSelect.value : null;
+    if (!enrollCourseId) {
         alert("Please select a course first.");
         return;
     }
-    const studentId = document.getElementById("enroll-student-id").value.trim();
-    const studentName = document.getElementById("enroll-student-name").value.trim();
 
-    if (!studentId || !studentName) {
-        alert("Please enter Student ID and Name.");
+    const enrollStudentSelect = document.getElementById("enroll-student-select");
+    const studentUserId = enrollStudentSelect ? enrollStudentSelect.value : null;
+    if (!studentUserId) {
+        alert("Please select a student.");
         return;
     }
+
     if (!capturedFaceBase64) {
         alert("Please capture the student's face first.");
         return;
@@ -167,9 +205,8 @@ async function enrollStudent() {
         const res = await apiFetch("/api/teacher/enroll", {
             method: "POST",
             body: JSON.stringify({
-                student_id: studentId,
-                student_name: studentName,
-                course_id: selectedCourseId,
+                student_user_id: parseInt(studentUserId),
+                course_id: parseInt(enrollCourseId),
                 face_image: capturedFaceBase64,
             }),
         });
@@ -181,8 +218,8 @@ async function enrollStudent() {
         }
 
         alert(data.message);
-        document.getElementById("enroll-student-id").value = "";
-        document.getElementById("enroll-student-name").value = "";
+        if (enrollCourseSelect) enrollCourseSelect.selectedIndex = 0;
+        if (enrollStudentSelect) enrollStudentSelect.selectedIndex = 0;
         capturedFaceBase64 = null;
         document.getElementById("enroll-face-status").textContent = "* Face Scan Required";
         document.getElementById("enroll-face-status").style.color = "red";
@@ -198,7 +235,7 @@ async function enrollStudent() {
 // ==================== FACE SCAN ATTENDANCE ====================
 async function scanFace() {
     if (!selectedCourseId) {
-        alert("Please select a course first.");
+        alert("Please select a course first from My Courses.");
         return;
     }
     const video = document.getElementById("camera-stream");
@@ -284,7 +321,7 @@ async function loadEnrolledStudents() {
 
 async function saveManualAttendance() {
     if (!selectedCourseId) {
-        alert("Please select a course first.");
+        alert("Please select a course first from My Courses.");
         return;
     }
     const selects = document.querySelectorAll("#manual-student-list select");
@@ -329,7 +366,7 @@ async function saveManualAttendance() {
 // ==================== REPORTS ====================
 async function viewDailySheet() {
     if (!selectedCourseId) {
-        alert("Please select a course first.");
+        alert("Please select a course first from My Courses.");
         return;
     }
     const dateVal = document.getElementById("report-date-picker").value;
@@ -355,7 +392,7 @@ async function viewDailySheet() {
 
 async function viewDetailedReport() {
     if (!selectedCourseId) {
-        alert("Please select a course first.");
+        alert("Please select a course first from My Courses.");
         return;
     }
     try {

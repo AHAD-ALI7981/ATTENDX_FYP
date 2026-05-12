@@ -10,33 +10,46 @@ router = APIRouter(prefix="/api/student", tags=["Student"])
 
 
 @router.get("/courses")
-def get_all_courses(
+def get_enrolled_courses(
     db: Session = Depends(get_db),
     user: dict = Depends(require_role("student")),
 ):
-    """Get all available courses for the student dropdown."""
-    courses = db.query(Course).all()
+    """Get only the courses the logged-in student is enrolled in."""
+    student_username = user["sub"]
+
+    # Find enrollments for this student
+    enrollments = db.query(Enrollment).filter(
+        Enrollment.student_id == student_username
+    ).all()
+
+    enrolled_course_ids = [e.course_id for e in enrollments]
+
+    if not enrolled_course_ids:
+        return []
+
+    courses = db.query(Course).filter(Course.id.in_(enrolled_course_ids)).all()
     return [
         {"id": c.id, "class_name": c.class_name, "subject": c.subject}
         for c in courses
     ]
 
 
-@router.get("/attendance", response_model=StudentAttendanceResponse)
+@router.get("/attendance/{course_id}", response_model=StudentAttendanceResponse)
 def check_attendance(
-    student_id: str,
     course_id: int,
     db: Session = Depends(get_db),
     user: dict = Depends(require_role("student")),
 ):
-    """Check attendance percentage for a student in a specific course."""
+    """Check attendance for the logged-in student in a specific course. Auto-detects student from JWT."""
+    student_username = user["sub"]
+
     enrollment = db.query(Enrollment).filter(
-        Enrollment.student_id == student_id,
+        Enrollment.student_id == student_username,
         Enrollment.course_id == course_id,
     ).first()
 
     if not enrollment:
-        raise HTTPException(404, "Student not enrolled in this course")
+        raise HTTPException(404, "You are not enrolled in this course")
 
     # Total classes = total unique attendance dates in this course
     all_enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
@@ -53,8 +66,21 @@ def check_attendance(
 
     percentage = (present_count / total_classes * 100) if total_classes > 0 else 0.0
 
+    # Get detailed attendance records for this student
+    records = db.query(Attendance).filter(
+        Attendance.enrollment_id == enrollment.id
+    ).order_by(Attendance.date.desc()).all()
+
+    record_list = [
+        {"date": str(r.date), "status": r.status}
+        for r in records
+    ]
+
     return StudentAttendanceResponse(
+        student_id=enrollment.student_id,
+        student_name=enrollment.student_name,
         total_classes=total_classes,
         present=present_count,
         percentage=round(percentage, 1),
+        records=record_list,
     )

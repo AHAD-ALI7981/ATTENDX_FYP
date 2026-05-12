@@ -8,12 +8,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!isAuthenticated) return;
 
     document.querySelector(".logout-btn").addEventListener("click", logout);
+    const sidebarLogout = document.querySelector(".sidebar-logout");
+    if(sidebarLogout) sidebarLogout.addEventListener("click", logout);
 
-    // Initial load
+    // Tab switching logic
+    const navItems = document.querySelectorAll('.nav-item');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            navItems.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            item.classList.add('active');
+            const targetId = item.getAttribute('data-target');
+            const targetTab = document.getElementById(targetId);
+            if (targetTab) targetTab.classList.add('active');
+        });
+    });
+
+    // Initial load — only shows enrolled courses
     loadStudentCourses();
 
     // Button event listener
-    document.querySelector(".action-btn").addEventListener("click", checkAttendance);
+    document.getElementById("btn-check-attendance").addEventListener("click", checkAttendance);
 });
 
 async function loadStudentCourses() {
@@ -25,6 +42,14 @@ async function loadStudentCourses() {
         const select = document.getElementById("student-course-select");
         select.innerHTML = '<option value="" disabled selected>Select Course...</option>';
 
+        if (courses.length === 0) {
+            const opt = document.createElement("option");
+            opt.disabled = true;
+            opt.textContent = "No enrolled courses found";
+            select.appendChild(opt);
+            return;
+        }
+
         courses.forEach((c) => {
             const opt = document.createElement("option");
             opt.value = c.id;
@@ -32,13 +57,12 @@ async function loadStudentCourses() {
             select.appendChild(opt);
         });
     } catch (err) {
-        console.error("Failed to load generic courses:", err);
+        console.error("Failed to load enrolled courses:", err);
     }
 }
 
 async function checkAttendance() {
     const courseId = document.getElementById("student-course-select").value;
-    const studentId = currentUser.username; // Grab securely authenticated identity
 
     if (!courseId) {
         alert("Please select a course to check attendance.");
@@ -46,7 +70,8 @@ async function checkAttendance() {
     }
 
     try {
-        const res = await apiFetch(`/api/student/attendance/${courseId}?student_id=${studentId}`);
+        // Auto-detects student from JWT — no manual student_id needed
+        const res = await apiFetch(`/api/student/attendance/${courseId}`);
         const data = await res.json();
 
         if (!res.ok) {

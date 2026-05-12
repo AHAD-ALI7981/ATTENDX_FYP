@@ -4,7 +4,7 @@ import math
 import re
 
 from database import get_db
-from models import User, Course, Class, CourseDefinition
+from models import User, Course, Class, CourseDefinition, Enrollment
 from schemas import (
     CourseCreate, CourseResponse, RegisterRequest, UserResponse,
     UserUpdateRequest, PaginatedUserResponse,
@@ -15,13 +15,15 @@ from auth import require_role, hash_password
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
 
+# ---------- Course Allotment ----------
+
 @router.post("/courses", status_code=201)
 def add_course(
     req: CourseCreate,
     db: Session = Depends(get_db),
     user: dict = Depends(require_role("admin")),
 ):
-    """Add a new course and assign a teacher to it."""
+    """Add a new course allotment: links a Class + CourseDefinition + Teacher."""
     # Find teacher by username
     teacher = db.query(User).filter(
         User.username == req.teacher_username, User.role == "teacher"
@@ -29,15 +31,36 @@ def add_course(
     if not teacher:
         raise HTTPException(404, f"Teacher '{req.teacher_username}' not found")
 
+    # Validate Class exists
+    class_ref = db.query(Class).filter(Class.id == req.class_ref_id).first()
+    if not class_ref:
+        raise HTTPException(404, "Selected class not found")
+
+    # Validate CourseDefinition exists
+    course_def = db.query(CourseDefinition).filter(CourseDefinition.id == req.course_def_id).first()
+    if not course_def:
+        raise HTTPException(404, "Selected course definition not found")
+
+    # Check for duplicate allotment
+    existing = db.query(Course).filter(
+        Course.class_ref_id == req.class_ref_id,
+        Course.course_def_id == req.course_def_id,
+        Course.teacher_id == teacher.id,
+    ).first()
+    if existing:
+        raise HTTPException(409, "This course is already allotted to this teacher for this class")
+
     course = Course(
-        class_name=req.class_name,
-        subject=req.subject,
+        class_name=class_ref.class_name,
+        subject=course_def.course_id,
         teacher_id=teacher.id,
+        class_ref_id=class_ref.id,
+        course_def_id=course_def.id,
     )
     db.add(course)
     db.commit()
     db.refresh(course)
-    return {"message": "Course added successfully", "course_id": course.id}
+    return {"message": "Course allotted successfully", "course_id": course.id}
 
 
 @router.get("/courses", response_model=list[CourseResponse])
@@ -58,6 +81,23 @@ def get_all_courses(
         ))
     return result
 
+
+@router.delete("/courses/{course_id}")
+def delete_course(
+    course_id: int,
+    db: Session = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin")),
+):
+    """Delete a course allotment and all its enrollments/attendance."""
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(404, "Course not found")
+    db.delete(course)
+    db.commit()
+    return {"message": "Course deleted successfully"}
+
+
+# ---------- User Management ----------
 
 @router.post("/users", status_code=201)
 def create_user(
@@ -109,7 +149,7 @@ def get_users(
         query = query.filter((User.username.like(search_term)) | (User.email.like(search_term)))
         
     total = query.count()
-    total_pages = math.ceil(total / limit)
+    total_pages = math.ceil(total / limit) if total > 0 else 1
     
     users = query.offset((page - 1) * limit).limit(limit).all()
     
@@ -132,14 +172,6 @@ def update_user(
     target_user = db.query(User).filter(User.id == user_id).first()
     if not target_user:
         raise HTTPException(404, "User not found")
-        
-    if req.email is not None:
-        # Check if email is already taken by someone else
-        if req.email != target_user.email:
-            existing = db.query(User).filter(User.email == req.email).first()
-            if existing:
-                raise HTTPException(409, "Email is already taken")
-        target_user.email = req.email
         
     if req.role is not None:
         if req.role not in ("teacher", "student", "admin"):
@@ -172,7 +204,7 @@ def delete_user(
     return {"message": "User deleted successfully"}
 
 
-# --- New Management Endpoints ---
+# ---------- Class Management ----------
 
 @router.post("/classes", status_code=201)
 def create_class(
@@ -213,6 +245,23 @@ def get_classes(
         ))
     return result
 
+@router.delete("/classes/{class_id}")
+def delete_class(
+    class_id: int,
+    db: Session = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin")),
+):
+    """Delete a class."""
+    cls = db.query(Class).filter(Class.id == class_id).first()
+    if not cls:
+        raise HTTPException(404, "Class not found")
+    db.delete(cls)
+    db.commit()
+    return {"message": "Class deleted successfully"}
+
+
+# ---------- Course Definition Management ----------
+
 @router.post("/course-defs", status_code=201)
 def create_course_def(
     req: CourseDefCreate,
@@ -240,3 +289,17 @@ def get_course_defs(
 ):
     """List all course definitions."""
     return db.query(CourseDefinition).all()
+
+@router.delete("/course-defs/{course_def_id}")
+def delete_course_def(
+    course_def_id: int,
+    db: Session = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin")),
+):
+    """Delete a course definition."""
+    cd = db.query(CourseDefinition).filter(CourseDefinition.id == course_def_id).first()
+    if not cd:
+        raise HTTPException(404, "Course definition not found")
+    db.delete(cd)
+    db.commit()
+    return {"message": "Course definition deleted successfully"}

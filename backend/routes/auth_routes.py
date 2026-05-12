@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from database import get_db
 from models import User
@@ -10,10 +12,13 @@ from auth import (
 )
 from email_utils import send_reset_email
 
+limiter = Limiter(key_func=get_remote_address)
+
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
 @router.post("/login")
-def login(req: LoginRequest, response: Response, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, req: LoginRequest, response: Response, db: Session = Depends(get_db)):
     """Login and set a secure HttpOnly JWT cookie."""
     user = db.query(User).filter(User.username == req.username).first()
     if not user or not verify_password(req.password, user.password_hash):
@@ -45,7 +50,8 @@ def get_me(user: dict = Depends(get_current_user)):
     return {"username": user.get("sub"), "role": user.get("role")}
 
 @router.post("/forgot-password")
-def forgot_password(req: ForgotPasswordRequest, req_obj: Request, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """Generates a reset token and sends an email to the user."""
     user = db.query(User).filter(User.email == req.email).first()
     
@@ -55,14 +61,15 @@ def forgot_password(req: ForgotPasswordRequest, req_obj: Request, db: Session = 
     if user:
         token = create_password_reset_token(user.email)
         # Construct the reset link based on the request's origin/host
-        base_url = str(req_obj.base_url).rstrip("/")
+        base_url = str(request.base_url).rstrip("/")
         reset_link = f"{base_url}/reset-password.html?token={token}"
         send_reset_email(user.email, reset_link)
         
     return {"message": msg}
 
 @router.post("/reset-password")
-def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+def reset_password(request: Request, req: ResetPasswordRequest, db: Session = Depends(get_db)):
     """Validates the reset token and updates the user's password."""
     email = verify_password_reset_token(req.token)
     

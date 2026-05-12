@@ -42,6 +42,20 @@ def get_my_courses(
     ]
 
 
+# ---------- Available Students for Enrollment ----------
+@router.get("/students-list")
+def get_student_users(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_role("teacher")),
+):
+    """Get all student user accounts for the enrollment dropdown."""
+    students = db.query(User).filter(User.role == "student").all()
+    return [
+        {"id": s.id, "username": s.username}
+        for s in students
+    ]
+
+
 # ---------- Enrollment with Face ----------
 @router.post("/enroll")
 def enroll_student(
@@ -51,7 +65,7 @@ def enroll_student(
 ):
     """
     Enroll a student in a course with facial registration.
-    Teacher provides student ID, name, course, and a face image (base64).
+    Teacher selects a student from existing accounts and a course.
     """
     # Verify course belongs to this teacher
     teacher = _get_teacher(db, user["sub"])
@@ -59,29 +73,35 @@ def enroll_student(
     if not course:
         raise HTTPException(403, "This course is not assigned to you")
 
+    # Verify student exists in users table
+    student_user = db.query(User).filter(User.id == req.student_user_id, User.role == "student").first()
+    if not student_user:
+        raise HTTPException(404, "Student account not found. Please ask admin to create the student account first.")
+
     # Check if already enrolled
     existing = db.query(Enrollment).filter(
-        Enrollment.student_id == req.student_id,
+        Enrollment.student_id == student_user.username,
         Enrollment.course_id == req.course_id,
     ).first()
     if existing:
-        raise HTTPException(409, f"Student {req.student_id} is already enrolled in this course")
+        raise HTTPException(409, f"Student {student_user.username} is already enrolled in this course")
 
     # Extract face encoding from image
     encoding = get_face_encoding(req.face_image)
     if encoding is None:
         raise HTTPException(400, "No face detected in the image. Please try again with a clear face photo.")
 
-    # Save enrollment with face encoding
+    # Save enrollment with face encoding, linked to user account
     enrollment = Enrollment(
-        student_id=req.student_id,
-        student_name=req.student_name,
+        student_id=student_user.username,
+        student_name=student_user.username,
+        user_id=student_user.id,
         course_id=req.course_id,
         face_encoding=encoding_to_json(encoding),
     )
     db.add(enrollment)
     db.commit()
-    return {"message": f"Student {req.student_name} ({req.student_id}) enrolled successfully with face data"}
+    return {"message": f"Student {student_user.username} enrolled successfully with face data"}
 
 
 # ---------- Face Scan Attendance ----------
@@ -201,6 +221,21 @@ def mark_manual_attendance(
     return {"message": f"Attendance saved for {len(req.records)} students"}
 
 
+# ---------- Enrolled Students List ----------
+@router.get("/students/{course_id}")
+def get_enrolled_students(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_role("teacher")),
+):
+    """Get all enrolled students in a course (for manual attendance form)."""
+    enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
+    return [
+        {"student_id": e.student_id, "student_name": e.student_name}
+        for e in enrollments
+    ]
+
+
 # ---------- Daily Attendance Sheet ----------
 @router.get("/attendance/{course_id}", response_model=list[DailyAttendanceItem])
 def get_daily_attendance(
@@ -262,18 +297,3 @@ def get_course_report(
         ))
 
     return result
-
-
-# ---------- Enrolled Students List ----------
-@router.get("/students/{course_id}")
-def get_enrolled_students(
-    course_id: int,
-    db: Session = Depends(get_db),
-    user: dict = Depends(require_role("teacher")),
-):
-    """Get all enrolled students in a course (for manual attendance form)."""
-    enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
-    return [
-        {"student_id": e.student_id, "student_name": e.student_name}
-        for e in enrollments
-    ]

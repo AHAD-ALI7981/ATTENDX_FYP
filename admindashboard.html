@@ -54,7 +54,7 @@
                     <div class="card">
                         <h4>Manage Users</h4>
                         <div class="input-group" style="margin-bottom: 15px;">
-                            <input type="text" id="admin-user-search" placeholder="Search by username or email...">
+                            <input type="text" id="admin-user-search" placeholder="Search by username...">
                             <select id="admin-user-filter-role"
                                 style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);">
                                 <option value="all">All Roles</option>
@@ -68,7 +68,6 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Username</th>
-                                        <th>Email</th>
                                         <th>Role</th>
                                         <th>Password</th>
                                         <th>Actions</th>
@@ -112,7 +111,7 @@
                             <h4>Create Student Account</h4>
                             <div class="input-group">
                                 <input type="text" id="admin-student-username"
-                                    placeholder="Username (e.g., student101)">
+                                    placeholder="Username (e.g., 2022-ag-7981)">
                                 <div style="display: flex; gap: 5px; flex: 1;">
                                     <input type="text" id="admin-student-password" placeholder="Password"
                                         style="min-width: 0;">
@@ -137,6 +136,7 @@
                                     <th>Class</th>
                                     <th>Subject</th>
                                     <th>Teacher</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -144,21 +144,29 @@
                     </div>
                 </div>
 
-                <!-- Add Course Tab -->
+                <!-- Allot Course Tab -->
                 <div id="add-course-tab" class="tab-content">
                     <div class="card form-group">
-                        <h4>Add Course & Allot Teacher</h4>
-                        <div class="input-group">
-                            <input type="text" id="admin-course-class" placeholder="Class (e.g., Grade 10-A)">
-                            <input type="text" id="admin-course-name" placeholder="Subject (e.g., Math)">
+                        <h4>Allot Course to Teacher</h4>
+                        <div style="margin: 15px 0;">
+                            <p style="margin-bottom: 10px; color: var(--white-soft); font-size: 0.9rem;">Select Class:</p>
+                            <select id="admin-allot-class-select" class="card" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); cursor: pointer;">
+                                <option value="">-- Choose a Class --</option>
+                            </select>
                         </div>
-                        <div style="margin: 20px 0;">
+                        <div style="margin: 15px 0;">
+                            <p style="margin-bottom: 10px; color: var(--white-soft); font-size: 0.9rem;">Select Course:</p>
+                            <select id="admin-allot-course-select" class="card" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); cursor: pointer;">
+                                <option value="">-- Choose a Course --</option>
+                            </select>
+                        </div>
+                        <div style="margin: 15px 0;">
                             <p style="margin-bottom: 10px; color: var(--white-soft); font-size: 0.9rem;">Select Teacher:</p>
                             <select id="admin-teacher-select" class="card" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); cursor: pointer;">
                                 <option value="">-- Choose a Teacher --</option>
                             </select>
                         </div>
-                        <button class="action-btn" id="btn-add-course">Allot & Add</button>
+                        <button class="action-btn" id="btn-add-course">Allot Course</button>
                     </div>
                 </div>
 
@@ -167,8 +175,8 @@
                     <div class="card form-group">
                         <h4>Create New Class</h4>
                         <div class="input-group">
-                            <input type="text" id="admin-class-id" placeholder="Class ID (e.g., CS-101)">
-                            <input type="text" id="admin-class-name" placeholder="Class Name (e.g., Grade 10-A)">
+                            <input type="text" id="admin-class-id" placeholder="Class ID (e.g., BSCS-5A)">
+                            <input type="text" id="admin-class-name" placeholder="Class Name (e.g., BS Computer Science 5th Semester A)">
                         </div>
                         <div style="margin: 20px 0;">
                             <p style="margin-bottom: 10px; color: var(--white-soft); font-size: 0.9rem;">Assign Teacher:</p>
@@ -187,6 +195,7 @@
                                     <th>Code</th>
                                     <th>Name</th>
                                     <th>Teacher</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -213,6 +222,7 @@
                                     <th>Code</th>
                                     <th>Description</th>
                                     <th>Credits</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -229,7 +239,6 @@
             <h4>Edit User</h4>
             <div class="input-group" style="flex-direction: column;">
                 <input type="hidden" id="edit-user-id">
-                <input type="email" id="edit-user-email" placeholder="Email Address">
                 <div style="display: flex; gap: 5px; width: 100%;">
                     <input type="text" id="edit-user-password" placeholder="New Password" style="flex-grow: 1;">
                     <button class="secondary-btn" id="btn-generate-edit-password" style="padding: 12px; min-width: auto;" title="Generate Password">

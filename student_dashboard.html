@@ -5,35 +5,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
 
 <body class="dashboard-mode">
-    <div id="app-dashboard">
-        <div class="dashboard-header">
-            <h2 id="welcome-msg">Welcome, STUDENT</h2>
-            <button class="logout-btn">Logout</button>
-        </div>
-        <div class="dashboard-content">
-            <div id="student-section" class="role-section">
-                <h3>Student Portal</h3>
-                <div class="card">
-                    <p class="hint" style="margin-bottom: 15px;">Check your attendance percentage for your enrolled subjects.</p>
-                    <label style="color:#333">Select Subject:</label>
-                    <select id="student-course-select"></select>
-                    <br><br>
-                    <button class="action-btn">Check Attendance</button>
-                </div>
 
-                <div id="student-result-area">
-                    <div class="card" style="text-align: center; border-left: 5px solid #8e44ad;">
-                        <h4>Attendance Percentage</h4>
-                        <h1 id="attendance-percentage" style="font-size: 4em; color: #2c3e50; margin: 10px 0;">0%</h1>
-                        <p id="attendance-details" style="color:#666;"></p>
+    <div id="app-layout" class="dashboard-layout" style="padding-top: 0;">
+        <!-- Sidebar -->
+        <aside class="sidebar" style="border-top-left-radius: 0;">
+            <div class="sidebar-header" style="margin-top: 10px;">
+                <h2>Student Panel</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-target="attendance-tab">
+                    <i class="ri-bar-chart-box-line"></i> My Attendance
+                </button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn sidebar-logout"><i class="ri-logout-box-r-line"></i> Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-header" style="margin-bottom: 30px;">
+                <h2 id="welcome-msg">Welcome, STUDENT</h2>
+            </div>
+            <div class="dashboard-content" style="margin-top: 0;">
+
+                <!-- Attendance Tab -->
+                <div id="attendance-tab" class="tab-content active">
+                    <div class="card">
+                        <h4>Check Your Attendance</h4>
+                        <p class="hint" style="margin-bottom: 15px;">Select an enrolled course to view your attendance record.</p>
+                        <div class="input-group">
+                            <select id="student-course-select">
+                                <option value="" disabled selected>Select Course...</option>
+                            </select>
+                            <button class="action-btn" id="btn-check-attendance" style="max-width: 200px;">Check</button>
+                        </div>
+                    </div>
+
+                    <div id="student-action-area" style="display: none;">
+                        <div class="card" style="border-left: 5px solid #8e44ad;">
+                            <div id="student-report-detail"></div>
+                        </div>
                     </div>
                 </div>
+
             </div>
-        </div>
+        </main>
     </div>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/student.js"></script>

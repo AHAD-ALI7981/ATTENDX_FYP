@@ -28,14 +28,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             const targetTab = document.getElementById(targetId);
             if (targetTab) {
                 targetTab.classList.add('active');
-                // Refresh teacher list if adding a course
+                // Refresh data based on which tab is opened
                 if (targetId === "add-course-tab") {
+                    loadClassesForDropdown();
+                    loadCourseDefsForDropdown();
                     loadTeachersToSelect("admin-teacher-select");
                 } else if (targetId === "create-class-tab") {
                     loadTeachersToSelect("admin-class-teacher-select");
                     loadClasses();
                 } else if (targetId === "create-course-tab") {
                     loadCourseDefs();
+                } else if (targetId === "allocated-courses-tab") {
+                    loadCourses();
                 }
             }
         });
@@ -205,13 +209,12 @@ async function loadUsers() {
                 row.innerHTML = `
                     <td>${u.id}</td>
                     <td>${u.username}</td>
-                    <td>${u.email || '-'}</td>
                     <td><span style="padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; background: rgba(255,255,255,0.1);">${u.role}</span></td>
                     <td>
                         <span style="font-family: monospace; letter-spacing: 1px; color: var(--accent);">${u.plain_password || '********'}</span>
                     </td>
                     <td>
-                        <button class="action-icon edit" onclick="openEditModal(${u.id}, '${u.email || ''}', '${u.role}', '${u.plain_password || ''}')"><i class="ri-edit-line"></i></button>
+                        <button class="action-icon edit" onclick="openEditModal(${u.id}, '${u.role}', '${u.plain_password || ''}')"><i class="ri-edit-line"></i></button>
                         <button class="action-icon delete" onclick="deleteUser(${u.id}, '${u.username}')"><i class="ri-delete-bin-line"></i></button>
                     </td>
                 `;
@@ -228,9 +231,8 @@ async function loadUsers() {
     }
 }
 
-function openEditModal(id, email, role, plainPassword) {
+function openEditModal(id, role, plainPassword) {
     document.getElementById("edit-user-id").value = id;
-    document.getElementById("edit-user-email").value = email;
     document.getElementById("edit-user-role").value = role;
     document.getElementById("edit-user-password").value = plainPassword;
     editModal.classList.remove("hidden");
@@ -238,7 +240,6 @@ function openEditModal(id, email, role, plainPassword) {
 
 async function saveUserEdit() {
     const id = document.getElementById("edit-user-id").value;
-    const email = document.getElementById("edit-user-email").value.trim();
     const role = document.getElementById("edit-user-role").value;
     const password = document.getElementById("edit-user-password").value.trim();
 
@@ -246,7 +247,6 @@ async function saveUserEdit() {
         const res = await apiFetch(`/api/admin/users/${id}`, {
             method: "PUT",
             body: JSON.stringify({ 
-                email: email || null, 
                 role,
                 password: password || null
             }),
@@ -296,16 +296,56 @@ async function deleteUser(id, username) {
     }
 }
 
+
+// ==================== COURSE ALLOTMENT ====================
+
+async function loadClassesForDropdown() {
+    try {
+        const res = await apiFetch("/api/admin/classes");
+        if (!res.ok) return;
+        const classes = await res.json();
+        const select = document.getElementById("admin-allot-class-select");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Choose a Class --</option>';
+        classes.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.class_id} — ${c.class_name}`;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to load classes for dropdown:", err);
+    }
+}
+
+async function loadCourseDefsForDropdown() {
+    try {
+        const res = await apiFetch("/api/admin/course-defs");
+        if (!res.ok) return;
+        const courses = await res.json();
+        const select = document.getElementById("admin-allot-course-select");
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Choose a Course --</option>';
+        courses.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.course_id}${c.course_description ? ' — ' + c.course_description : ''}`;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to load course defs for dropdown:", err);
+    }
+}
+
 async function addCourse() {
-    const className = document.getElementById("admin-course-class").value.trim();
-    const subject = document.getElementById("admin-course-name").value.trim();
-    
+    const classRefId = document.getElementById("admin-allot-class-select").value;
+    const courseDefId = document.getElementById("admin-allot-course-select").value;
     const teacherSelect = document.getElementById("admin-teacher-select");
     const selectedOption = teacherSelect ? teacherSelect.options[teacherSelect.selectedIndex] : null;
     const teacherName = (selectedOption && selectedOption.value) ? selectedOption.getAttribute('data-username') : null;
 
-    if (!className || !subject || !teacherName) {
-        alert("Please fill in all fields and select a teacher.");
+    if (!classRefId || !courseDefId || !teacherName) {
+        alert("Please select a class, course, and teacher.");
         return;
     }
 
@@ -313,22 +353,22 @@ async function addCourse() {
         const res = await apiFetch("/api/admin/courses", {
             method: "POST",
             body: JSON.stringify({
-                class_name: className,
-                subject: subject,
+                class_ref_id: parseInt(classRefId),
+                course_def_id: parseInt(courseDefId),
                 teacher_username: teacherName,
             }),
         });
 
         const data = await res.json();
         if (!res.ok) {
-            alert(data.detail || "Failed to add course");
+            alert(data.detail || "Failed to allot course");
             return;
         }
 
         alert(data.message);
-        // Clear inputs
-        document.getElementById("admin-course-class").value = "";
-        document.getElementById("admin-course-name").value = "";
+        // Clear selections
+        document.getElementById("admin-allot-class-select").selectedIndex = 0;
+        document.getElementById("admin-allot-course-select").selectedIndex = 0;
         if (teacherSelect) teacherSelect.selectedIndex = 0;
         // Reload table
         loadCourses();
@@ -345,6 +385,7 @@ async function loadCourses() {
 
         const courses = await res.json();
         const tbody = document.querySelector("#admin-course-table tbody");
+        if (!tbody) return;
         tbody.innerHTML = "";
 
         courses.forEach((c) => {
@@ -353,6 +394,9 @@ async function loadCourses() {
                 <td>${c.class_name}</td>
                 <td>${c.subject}</td>
                 <td>${c.teacher_name}</td>
+                <td>
+                    <button class="action-icon delete" onclick="deleteCourse(${c.id})"><i class="ri-delete-bin-line"></i></button>
+                </td>
             `;
             tbody.appendChild(row);
         });
@@ -360,6 +404,23 @@ async function loadCourses() {
         console.error("Failed to load courses:", err);
     }
 }
+
+async function deleteCourse(id) {
+    if (!confirm("Delete this course allotment? All related enrollments and attendance data will be removed.")) return;
+    try {
+        const res = await apiFetch(`/api/admin/courses/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) { alert(data.detail || "Failed to delete"); return; }
+        alert(data.message);
+        loadCourses();
+    } catch (err) {
+        console.error(err);
+        alert("Server error deleting course.");
+    }
+}
+
+
+// ==================== TEACHER DROPDOWN ====================
 
 async function loadTeachersToSelect(selectId) {
     const select = document.getElementById(selectId);
@@ -374,11 +435,8 @@ async function loadTeachersToSelect(selectId) {
         
         data.users.forEach(t => {
             const opt = document.createElement("option");
-            opt.value = t.id; // Store ID for backend
+            opt.value = t.id;
             opt.textContent = `${t.username} (ID: ${t.id})`;
-            // For the older 'addCourse' function which uses username, we might need to handle it.
-            // But let's stick to IDs for new entities.
-            // We'll update addCourse to use the textContent username if needed.
             opt.setAttribute('data-username', t.username);
             select.appendChild(opt);
         });
@@ -387,10 +445,8 @@ async function loadTeachersToSelect(selectId) {
     }
 }
 
-// Keep the old function name for compatibility or refactor it
-async function loadTeachersForSelection() {
-    return loadTeachersToSelect("admin-teacher-select");
-}
+
+// ==================== CLASS MANAGEMENT ====================
 
 async function createClass() {
     const classId = document.getElementById("admin-class-id").value.trim();
@@ -446,6 +502,9 @@ async function loadClasses() {
                 <td>${c.class_id}</td>
                 <td>${c.class_name}</td>
                 <td>${c.teacher_name || 'Unassigned'}</td>
+                <td>
+                    <button class="action-icon delete" onclick="deleteClass(${c.id})"><i class="ri-delete-bin-line"></i></button>
+                </td>
             `;
             tbody.appendChild(row);
         });
@@ -453,6 +512,23 @@ async function loadClasses() {
         console.error("Failed to load classes:", err);
     }
 }
+
+async function deleteClass(id) {
+    if (!confirm("Delete this class?")) return;
+    try {
+        const res = await apiFetch(`/api/admin/classes/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) { alert(data.detail || "Failed to delete"); return; }
+        alert(data.message);
+        loadClasses();
+    } catch (err) {
+        console.error(err);
+        alert("Server error deleting class.");
+    }
+}
+
+
+// ==================== COURSE DEFINITION MANAGEMENT ====================
 
 async function createCourseDef() {
     const courseId = document.getElementById("admin-course-def-id").value.trim();
@@ -506,10 +582,27 @@ async function loadCourseDefs() {
                 <td>${c.course_id}</td>
                 <td>${c.course_description || '-'}</td>
                 <td>${c.credit_hours}</td>
+                <td>
+                    <button class="action-icon delete" onclick="deleteCourseDef(${c.id})"><i class="ri-delete-bin-line"></i></button>
+                </td>
             `;
             tbody.appendChild(row);
         });
     } catch (err) {
         console.error("Failed to load course definitions:", err);
+    }
+}
+
+async function deleteCourseDef(id) {
+    if (!confirm("Delete this course definition?")) return;
+    try {
+        const res = await apiFetch(`/api/admin/course-defs/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) { alert(data.detail || "Failed to delete"); return; }
+        alert(data.message);
+        loadCourseDefs();
+    } catch (err) {
+        console.error(err);
+        alert("Server error deleting course definition.");
     }
 }

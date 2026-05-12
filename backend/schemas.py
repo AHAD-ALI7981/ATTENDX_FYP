@@ -28,7 +28,6 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 class UserUpdateRequest(BaseModel):
-    email: Optional[str] = None
     role: Optional[str] = None
     password: Optional[str] = None
 
@@ -51,23 +50,7 @@ class TokenResponse(BaseModel):
     username: str
 
 
-# ---- Enrollment & Attendance ----
-class EnrollmentCreate(BaseModel):
-    student_id: str
-    student_name: str
-    course_id: int
-
-class EnrollmentResponse(BaseModel):
-    id: int
-    student_id: str
-    student_name: str
-    course_id: int
-    created_at: date
-
-    class Config:
-        from_attributes = True
-
-# ---- New Management Schemas ----
+# ---- Classes ----
 class ClassCreate(BaseModel):
     class_id: str
     class_name: str
@@ -83,6 +66,8 @@ class ClassResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+# ---- Course Definitions ----
 class CourseDefCreate(BaseModel):
     course_id: str
     course_description: Optional[str] = None
@@ -98,12 +83,11 @@ class CourseDefResponse(BaseModel):
         from_attributes = True
 
 
-# ---- Admin: Courses ----
+# ---- Admin: Course Allotment ----
 class CourseCreate(BaseModel):
-    class_name: str
-    subject: str
+    class_ref_id: int          # FK to classes table
+    course_def_id: int         # FK to course_definitions table
     teacher_username: str
-
 
 class CourseResponse(BaseModel):
     id: int
@@ -117,10 +101,9 @@ class CourseResponse(BaseModel):
 
 # ---- Teacher: Enrollment ----
 class EnrollRequest(BaseModel):
-    student_id: str
-    student_name: str
+    student_user_id: int       # FK to users table (student account)
     course_id: int
-    face_image: str  # base64 encoded image
+    face_image: str            # base64 encoded image
 
 
 # ---- Teacher: Face Scan Attendance ----
@@ -165,6 +148,9 @@ class ReportItem(BaseModel):
 
 # ---- Student ----
 class StudentAttendanceResponse(BaseModel):
+    student_id: str
+    student_name: str
     total_classes: int
     present: int
     percentage: float
+    records: List[dict] = []
