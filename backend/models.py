@@ -9,16 +9,16 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     username = Column(String(50), unique=True, nullable=False, index=True)
+    full_name = Column(String(100), nullable=True)
     email = Column(String(100), unique=True, nullable=True, index=True)
     password_hash = Column(String(255), nullable=False)
-    plain_password = Column(String(50), nullable=True)
     role = Column(Enum("admin", "teacher", "student", name="user_role"), nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     # Relationship: teacher -> courses
-    courses = relationship("Course", back_populates="teacher")
+    courses = relationship("Course", back_populates="teacher", cascade="all, delete-orphan", passive_deletes=True)
     # Relationship: student -> enrollments
-    enrollments = relationship("Enrollment", back_populates="user")
+    enrollments = relationship("Enrollment", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class Class(Base):

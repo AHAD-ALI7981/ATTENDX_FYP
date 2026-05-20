@@ -58,7 +58,7 @@ with SessionLocal() as db:
     # Seed default admin account
     if not db.query(User).filter(User.username == "admin").first():
         db.add(User(username="admin", email="admin@example.com", password_hash=hash_password("admin123"), role="admin"))
-        db.add(User(username="teacher", password_hash=hash_password("teacher123"), plain_password="teacher123", role="teacher"))
+        db.add(User(username="teacher", password_hash=hash_password("teacher123"), role="teacher"))
         db.commit()
         print("Created default admin and teacher accounts.")
 

@@ -39,6 +39,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     loadStudentsList();
     setupEnrollmentCamera();
     setupButtons();
+
+    // Setup event listener for the Mark Attendance dropdown
+    const markAttendanceSelect = document.getElementById("mark-attendance-course-select");
+    if (markAttendanceSelect) {
+        markAttendanceSelect.addEventListener("change", (e) => {
+            selectedCourseId = e.target.value;
+            loadEnrolledStudents();
+        });
+    }
 });
 
 // ==================== COURSES ====================
@@ -51,17 +60,41 @@ async function loadMyCourses() {
         const container = document.getElementById("teacher-course-list");
         container.innerHTML = "";
 
-        // Populate enroll course dropdown
+        // Populate enroll course and mark attendance dropdowns
         const enrollSelect = document.getElementById("enroll-course-select");
+        const markAttendanceSelect = document.getElementById("mark-attendance-course-select");
+        const reportSelect = document.getElementById("report-course-select");
+        
         if (enrollSelect) {
             enrollSelect.innerHTML = '<option value="" disabled selected>Select Course</option>';
-            courses.forEach((c) => {
+        }
+        if (markAttendanceSelect) {
+            markAttendanceSelect.innerHTML = '<option value="" disabled selected>Select Course</option>';
+        }
+        if (reportSelect) {
+            reportSelect.innerHTML = '<option value="" disabled selected>Select Course...</option>';
+        }
+        
+        courses.forEach((c) => {
+            if (enrollSelect) {
                 const opt = document.createElement("option");
                 opt.value = c.id;
                 opt.textContent = `${c.class_name} — ${c.subject}`;
                 enrollSelect.appendChild(opt);
-            });
-        }
+            }
+            if (markAttendanceSelect) {
+                const opt = document.createElement("option");
+                opt.value = c.id;
+                opt.textContent = `${c.class_name} — ${c.subject}`;
+                markAttendanceSelect.appendChild(opt);
+            }
+            if (reportSelect) {
+                const opt = document.createElement("option");
+                opt.value = c.id;
+                opt.textContent = `${c.class_name} — ${c.subject}`;
+                reportSelect.appendChild(opt);
+            }
+        });
 
         if (courses.length === 0) {
             container.innerHTML = '<p class="hint">No courses assigned yet. Ask admin to allot courses.</p>';
@@ -168,12 +201,15 @@ function setupButtons() {
             btn.addEventListener("click", scanFace);
         } else if (text === "SAVE MANUAL ATTENDANCE") {
             btn.addEventListener("click", saveManualAttendance);
-        } else if (text === "VIEW DAILY SHEET") {
-            btn.addEventListener("click", viewDailySheet);
-        } else if (text.includes("VIEW DETAILED")) {
-            btn.addEventListener("click", viewDetailedReport);
         }
     });
+
+    // Report buttons
+    const generateBtn = document.getElementById("btn-generate-report");
+    if (generateBtn) generateBtn.addEventListener("click", generateFullReport);
+
+    const downloadBtn = document.getElementById("btn-download-pdf");
+    if (downloadBtn) downloadBtn.addEventListener("click", downloadPDF);
 
     const reportBtn = document.querySelector(".secondary-btn");
     if (reportBtn && reportBtn.textContent.includes("View All Classes")) {
@@ -364,52 +400,236 @@ async function saveManualAttendance() {
 
 
 // ==================== REPORTS ====================
-async function viewDailySheet() {
-    if (!selectedCourseId) {
-        alert("Please select a course first from My Courses.");
+let lastReportData = null; // stores last fetched report for PDF download
+
+async function generateFullReport() {
+    const courseSelect = document.getElementById("report-course-select");
+    const courseId = courseSelect ? courseSelect.value : null;
+
+    if (!courseId) {
+        alert("Please select a course to generate a report.");
         return;
     }
-    const dateVal = document.getElementById("report-date-picker").value;
-    if (!dateVal) {
-        alert("Please select a date.");
-        return;
-    }
+
+    const btn = document.getElementById("btn-generate-report");
+    btn.disabled = true;
+    btn.textContent = "Generating...";
 
     try {
-        const res = await apiFetch(`/api/teacher/attendance/${selectedCourseId}?date=${dateVal}`);
-        if (!res.ok) return;
+        const res = await apiFetch(`/api/teacher/report-full/${courseId}`);
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || "Failed to generate report");
+            return;
+        }
 
-        const records = await res.json();
+        const data = await res.json();
+        lastReportData = data;
+        const meta = data.meta;
+        const students = data.students;
+
+        // Fill stat cards
+        document.getElementById("stat-total-classes").textContent = meta.total_classes;
+        document.getElementById("stat-total-students").textContent = meta.total_students;
+        document.getElementById("stat-credit-hours").textContent = meta.credit_hours;
+        document.getElementById("stat-shortage").textContent = meta.shortage_count;
+
+        // Fill metadata bar
+        document.getElementById("meta-class").textContent = meta.class_name;
+        document.getElementById("meta-course").textContent = `${meta.course_code} — ${meta.subject}`;
+        document.getElementById("meta-teacher").textContent = meta.teacher_name;
+        document.getElementById("meta-date").textContent = meta.report_date;
+
+        // Show summary area
+        document.getElementById("report-summary-area").style.display = "block";
+
+        // Build report table with shortage highlighting
         const area = document.getElementById("teacher-report-area");
-        area.innerHTML = generateTable(
-            ["Student ID", "Name", "Status"],
-            records.map((r) => [r.student_id, r.student_name, r.status.toUpperCase()])
-        );
+
+        if (students.length === 0) {
+            area.innerHTML = '<p class="hint" style="text-align:center; padding: 20px;">No enrolled students found for this course.</p>';
+            return;
+        }
+
+        let html = '<table><thead><tr>';
+        html += '<th>#</th><th>Student ID</th><th>Name</th><th>Present</th><th>Absent</th><th>Total</th><th>Percentage</th><th>Status</th>';
+        html += '</tr></thead><tbody>';
+
+        students.forEach((s, i) => {
+            const rowBg = s.is_short ? 'background: rgba(248, 113, 113, 0.08);' : '';
+            const pctColor = s.is_short ? '#f87171' : '#34d399';
+            const badge = s.is_short
+                ? '<span style="background: rgba(248,113,113,0.2); color: #f87171; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">SHORTAGE</span>'
+                : '<span style="background: rgba(52,211,153,0.2); color: #34d399; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px;">OK</span>';
+
+            html += `<tr style="${rowBg}">`;
+            html += `<td>${i + 1}</td>`;
+            html += `<td>${s.student_id}</td>`;
+            html += `<td>${s.student_name}</td>`;
+            html += `<td style="color: #34d399; font-weight: 500;">${s.present}</td>`;
+            html += `<td style="color: #f87171; font-weight: 500;">${s.absent}</td>`;
+            html += `<td>${s.total_classes}</td>`;
+            html += `<td style="color: ${pctColor}; font-weight: 600;">${s.percentage}%</td>`;
+            html += `<td>${badge}</td>`;
+            html += '</tr>';
+        });
+
+        html += '</tbody></table>';
+
+        // Shortage summary at the bottom
+        if (meta.shortage_count > 0) {
+            html += `<div style="margin-top: 15px; padding: 12px 16px; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); border-radius: 8px; color: #fca5a5; font-size: 0.9rem;">
+                <i class="ri-error-warning-line" style="margin-right: 5px;"></i>
+                <strong>${meta.shortage_count} student(s)</strong> have attendance below 75% threshold.
+            </div>`;
+        }
+
+        area.innerHTML = html;
+
     } catch (err) {
-        console.error(err);
+        console.error("Report generation error:", err);
+        alert("Server error generating report.");
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "Generate Report";
     }
 }
 
-async function viewDetailedReport() {
-    if (!selectedCourseId) {
-        alert("Please select a course first from My Courses.");
+
+// ==================== PDF DOWNLOAD ====================
+function downloadPDF() {
+    if (!lastReportData) {
+        alert("Please generate a report first.");
         return;
     }
-    try {
-        const res = await apiFetch(`/api/teacher/report/${selectedCourseId}`);
-        if (!res.ok) return;
 
-        const report = await res.json();
-        const area = document.getElementById("teacher-report-area");
-        area.innerHTML = generateTable(
-            ["Student ID", "Name", "Total Classes", "Present", "Percentage"],
-            report.map((r) => [r.student_id, r.student_name, r.total_classes, r.present, `${r.percentage}%`])
-        );
-    } catch (err) {
-        console.error(err);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("landscape", "mm", "a4");
+    const meta = lastReportData.meta;
+    const students = lastReportData.students;
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // ---- Header Bar ----
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, pageWidth, 32, "F");
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("AttendX — Attendance Report", 14, 15);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Generated: ${meta.report_date}`, pageWidth - 14, 15, { align: "right" });
+
+    // ---- Course Metadata ----
+    let yPos = 42;
+    doc.setTextColor(40, 40, 40);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+
+    const metaItems = [
+        [`Class: ${meta.class_name}`, `Course: ${meta.course_code} — ${meta.subject}`],
+        [`Teacher: ${meta.teacher_name}`, `Credit Hours: ${meta.credit_hours}`],
+        [`Total Classes: ${meta.total_classes}`, `Total Students: ${meta.total_students}`],
+    ];
+
+    metaItems.forEach(pair => {
+        doc.setFont("helvetica", "normal");
+        doc.text(pair[0], 14, yPos);
+        doc.text(pair[1], pageWidth / 2 + 14, yPos);
+        yPos += 6;
+    });
+
+    // Shortage warning
+    if (meta.shortage_count > 0) {
+        yPos += 2;
+        doc.setTextColor(220, 50, 50);
+        doc.setFont("helvetica", "bold");
+        doc.text(`⚠ ${meta.shortage_count} student(s) below 75% attendance threshold`, 14, yPos);
+        doc.setTextColor(40, 40, 40);
+        yPos += 4;
     }
+
+    yPos += 4;
+
+    // ---- Student Table ----
+    const tableHeaders = [["#", "Student ID", "Name", "Present", "Absent", "Total", "%", "Status"]];
+    const tableRows = students.map((s, i) => [
+        i + 1,
+        s.student_id,
+        s.student_name,
+        s.present,
+        s.absent,
+        s.total_classes,
+        `${s.percentage}%`,
+        s.is_short ? "SHORTAGE" : "OK",
+    ]);
+
+    doc.autoTable({
+        head: tableHeaders,
+        body: tableRows,
+        startY: yPos,
+        theme: "grid",
+        headStyles: {
+            fillColor: [15, 23, 42],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+            fontSize: 9,
+            halign: "center",
+        },
+        bodyStyles: {
+            fontSize: 9,
+            halign: "center",
+        },
+        alternateRowStyles: {
+            fillColor: [245, 247, 250],
+        },
+        didParseCell: function (data) {
+            // Color the status column
+            if (data.section === "body" && data.column.index === 7) {
+                if (data.cell.raw === "SHORTAGE") {
+                    data.cell.styles.textColor = [220, 50, 50];
+                    data.cell.styles.fontStyle = "bold";
+                } else {
+                    data.cell.styles.textColor = [34, 160, 100];
+                    data.cell.styles.fontStyle = "bold";
+                }
+            }
+            // Color percentage column
+            if (data.section === "body" && data.column.index === 6) {
+                const pct = parseFloat(data.cell.raw);
+                if (pct < 75) {
+                    data.cell.styles.textColor = [220, 50, 50];
+                    data.cell.styles.fontStyle = "bold";
+                }
+            }
+        },
+        margin: { left: 14, right: 14 },
+    });
+
+    // ---- Footer ----
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(
+            `Page ${i} of ${pageCount} | AttendX Attendance System`,
+            pageWidth / 2,
+            doc.internal.pageSize.getHeight() - 8,
+            { align: "center" }
+        );
+    }
+
+    // Save
+    const fileName = `AttendX_Report_${meta.class_name}_${meta.course_code}_${meta.report_date}.pdf`;
+    doc.save(fileName.replace(/\s+/g, "_"));
 }
 
+
+// ==================== ALL CLASSES REPORT ====================
 async function viewAllClassesReport() {
     try {
         const res = await apiFetch("/api/teacher/my-courses");
@@ -419,22 +639,37 @@ async function viewAllClassesReport() {
         let html = "";
 
         for (const c of courses) {
-            const reportRes = await apiFetch(`/api/teacher/report/${c.id}`);
+            const reportRes = await apiFetch(`/api/teacher/report-full/${c.id}`);
             if (!reportRes.ok) continue;
 
-            const report = await reportRes.json();
-            html += `<h4 style="margin:15px 0 5px; color:var(--white-soft);">${c.class_name} — ${c.subject}</h4>`;
-            html += generateTable(
-                ["Student ID", "Name", "Total", "Present", "%"],
-                report.map((r) => [r.student_id, r.student_name, r.total_classes, r.present, `${r.percentage}%`])
-            );
+            const data = await reportRes.json();
+            const meta = data.meta;
+            const students = data.students;
+
+            html += `<div style="margin-bottom: 25px;">`;
+            html += `<h4 style="margin:0 0 5px; color:var(--white-soft);"><i class="ri-book-2-line" style="margin-right:4px;"></i>${meta.class_name} — ${meta.subject}</h4>`;
+            html += `<p style="color:var(--white-muted); font-size:0.85rem; margin-bottom:10px;">Credit Hours: ${meta.credit_hours} | Teacher: ${meta.teacher_name} | Classes Held: ${meta.total_classes}</p>`;
+
+            if (students.length === 0) {
+                html += '<p class="hint">No students enrolled.</p>';
+            } else {
+                html += '<table><thead><tr><th>#</th><th>Student ID</th><th>Name</th><th>Present</th><th>Absent</th><th>%</th><th>Status</th></tr></thead><tbody>';
+                students.forEach((s, i) => {
+                    const rowBg = s.is_short ? 'background: rgba(248, 113, 113, 0.08);' : '';
+                    const pctColor = s.is_short ? '#f87171' : '#34d399';
+                    const badge = s.is_short
+                        ? '<span style="background:rgba(248,113,113,0.2);color:#f87171;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;">SHORT</span>'
+                        : '<span style="background:rgba(52,211,153,0.2);color:#34d399;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;">OK</span>';
+                    html += `<tr style="${rowBg}"><td>${i+1}</td><td>${s.student_id}</td><td>${s.student_name}</td><td style="color:#34d399;">${s.present}</td><td style="color:#f87171;">${s.absent}</td><td style="color:${pctColor};font-weight:600;">${s.percentage}%</td><td>${badge}</td></tr>`;
+                });
+                html += '</tbody></table>';
+            }
+            html += `</div><hr>`;
         }
 
         const area = document.getElementById("teacher-report-area");
-        if (!area) {
-            alert("Report loaded. Check the reports section below.");
-            return;
-        }
+        if (!area) return;
+        document.getElementById("report-summary-area").style.display = "block";
         area.innerHTML = html || '<p class="hint">No data available.</p>';
     } catch (err) {
         console.error(err);

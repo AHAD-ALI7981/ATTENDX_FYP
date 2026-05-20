@@ -297,3 +297,78 @@ def get_course_report(
         ))
 
     return result
+
+
+# ---------- Full Report with Metadata ----------
+@router.get("/report-full/{course_id}")
+def get_full_course_report(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_role("teacher")),
+):
+    """
+    Get a comprehensive attendance report including course metadata,
+    student attendance stats, and shortage flags (below 75%).
+    """
+    teacher = _get_teacher(db, user["sub"])
+    course = db.query(Course).filter(Course.id == course_id, Course.teacher_id == teacher.id).first()
+    if not course:
+        raise HTTPException(403, "This course is not assigned to you")
+
+    # Get course metadata
+    credit_hours = 3  # default
+    course_code = course.subject
+    if course.course_def:
+        credit_hours = course.course_def.credit_hours or 3
+        course_code = course.course_def.course_id or course.subject
+
+    teacher_name = teacher.full_name or teacher.username
+
+    # Calculate attendance stats
+    enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
+    all_enrollment_ids = [e.id for e in enrollments]
+
+    total_dates = 0
+    if all_enrollment_ids:
+        total_dates = db.query(Attendance.date).filter(
+            Attendance.enrollment_id.in_(all_enrollment_ids)
+        ).distinct().count()
+
+    students = []
+    shortage_count = 0
+    for e in enrollments:
+        present_count = db.query(Attendance).filter(
+            Attendance.enrollment_id == e.id,
+            Attendance.status == "present",
+        ).count()
+
+        percentage = round((present_count / total_dates * 100), 1) if total_dates > 0 else 0.0
+        is_short = percentage < 75.0
+
+        if is_short:
+            shortage_count += 1
+
+        students.append({
+            "student_id": e.student_id,
+            "student_name": e.student_name,
+            "total_classes": total_dates,
+            "present": present_count,
+            "absent": total_dates - present_count,
+            "percentage": percentage,
+            "is_short": is_short,
+        })
+
+    return {
+        "meta": {
+            "class_name": course.class_name,
+            "course_code": course_code,
+            "subject": course.subject,
+            "credit_hours": credit_hours,
+            "teacher_name": teacher_name,
+            "total_classes": total_dates,
+            "total_students": len(enrollments),
+            "shortage_count": shortage_count,
+            "report_date": str(date.today()),
+        },
+        "students": students,
+    }

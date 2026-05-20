@@ -14,7 +14,7 @@ DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB
 engine = create_engine(DATABASE_URL)
 
 with engine.connect() as conn:
-    res = conn.execute(text("SELECT id, username, role, plain_password FROM users;")).fetchall()
+    res = conn.execute(text("SELECT id, username, role FROM users;")).fetchall()
     print("Users in DB:")
     for row in res:
         print(row)

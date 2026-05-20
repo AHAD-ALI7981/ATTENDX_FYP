@@ -541,6 +541,11 @@ hr {
   .course-list-container {
     grid-template-columns: 1fr;
   }
+
+  /* Report stats responsive */
+  #report-summary-area > div:first-child {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
 }
 
 @media (max-width: 480px) {

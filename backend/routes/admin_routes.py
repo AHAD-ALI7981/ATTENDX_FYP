@@ -73,11 +73,12 @@ def get_all_courses(
     result = []
     for c in courses:
         teacher = db.query(User).filter(User.id == c.teacher_id).first()
+        class_ref = db.query(Class).filter(Class.id == c.class_ref_id).first() if c.class_ref_id else None
         result.append(CourseResponse(
             id=c.id,
-            class_name=c.class_name,
+            class_name=class_ref.class_id if class_ref else c.class_name,
             subject=c.subject,
-            teacher_name=teacher.username if teacher else "Unknown",
+            teacher_name=(teacher.full_name or teacher.username) if teacher else "Unknown",
         ))
     return result
 
@@ -119,9 +120,9 @@ def create_user(
 
     new_user = User(
         username=req.username,
+        full_name=req.full_name,
         email=req.email,
         password_hash=hash_password(req.password),
-        plain_password=req.password,
         role=req.role,
     )
     db.add(new_user)
@@ -173,6 +174,9 @@ def update_user(
     if not target_user:
         raise HTTPException(404, "User not found")
         
+    if req.full_name is not None:
+        target_user.full_name = req.full_name
+
     if req.role is not None:
         if req.role not in ("teacher", "student", "admin"):
             raise HTTPException(400, "Invalid role")
@@ -180,7 +184,6 @@ def update_user(
 
     if req.password is not None:
         target_user.password_hash = hash_password(req.password)
-        target_user.plain_password = req.password
         
     db.commit()
     return {"message": "User updated successfully"}

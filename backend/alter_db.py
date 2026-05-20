@@ -15,8 +15,8 @@ engine = create_engine(DATABASE_URL)
 
 with engine.connect() as conn:
     try:
-        conn.execute(text("ALTER TABLE users ADD COLUMN plain_password VARCHAR(50) NULL;"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN full_name VARCHAR(100) NULL AFTER username;"))
         conn.commit()
-        print("Column plain_password added successfully.")
+        print("Column full_name added successfully.")
     except Exception as e:
         print("Error or already exists:", e)

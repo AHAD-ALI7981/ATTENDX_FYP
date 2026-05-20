@@ -5,7 +5,7 @@ from slowapi.util import get_remote_address
 
 from database import get_db
 from models import User
-from schemas import LoginRequest, ForgotPasswordRequest, ResetPasswordRequest
+from schemas import LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, UpdatePasswordRequest
 from auth import (
     verify_password, create_access_token, get_current_user, EXPIRE_HOURS,
     hash_password, create_password_reset_token, verify_password_reset_token
@@ -81,3 +81,21 @@ def reset_password(request: Request, req: ResetPasswordRequest, db: Session = De
     db.commit()
     
     return {"message": "Password has been successfully reset. You can now login."}
+
+@router.post("/update-password")
+def update_password(req: UpdatePasswordRequest, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    """Allows a logged-in user to change their own password."""
+    db_user = db.query(User).filter(User.username == user.get("sub")).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not verify_password(req.current_password, db_user.password_hash):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(req.new_password) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters")
+
+    db_user.password_hash = hash_password(req.new_password)
+    db.commit()
+
+    return {"message": "Password updated successfully"}

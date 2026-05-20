@@ -31,6 +31,29 @@
         <main class="main-content">
             <div class="dashboard-header" style="margin-bottom: 30px;">
                 <h2 id="welcome-msg">Welcome, STUDENT</h2>
+                <button id="btn-open-update-password" class="secondary-btn" style="padding: 8px 18px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-lock-password-line"></i> Update Password
+                </button>
+            </div>
+
+            <!-- Update Password Modal -->
+            <div id="update-password-modal" class="modal-overlay hidden">
+                <div class="modal-content">
+                    <div class="card" style="border-left: 5px solid var(--accent);">
+                        <h4><i class="ri-lock-password-line"></i> Update Password</h4>
+                        <p class="hint">Enter your current password and choose a new one.</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                            <input type="password" id="current-password-input" placeholder="Current Password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem; color: var(--white); background: var(--input-bg); outline: none;">
+                            <input type="password" id="new-password-input" placeholder="New Password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem; color: var(--white); background: var(--input-bg); outline: none;">
+                            <input type="password" id="confirm-password-input" placeholder="Confirm New Password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem; color: var(--white); background: var(--input-bg); outline: none;">
+                            <p id="update-password-error" style="color: var(--danger); font-size: 0.85rem; min-height: 20px;"></p>
+                            <div style="display: flex; gap: 10px;">
+                                <button id="btn-submit-update-password" class="action-btn" style="flex: 1;">Save</button>
+                                <button id="btn-cancel-update-password" class="secondary-btn" style="flex: 1;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="dashboard-content" style="margin-top: 0;">
 

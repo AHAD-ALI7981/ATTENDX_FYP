@@ -124,3 +124,89 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+/**
+ * Update Password Modal — Shared logic for Teacher & Student dashboards
+ */
+document.addEventListener("DOMContentLoaded", () => {
+    const openBtn = document.getElementById("btn-open-update-password");
+    const modal = document.getElementById("update-password-modal");
+    if (!openBtn || !modal) return;
+
+    const cancelBtn = document.getElementById("btn-cancel-update-password");
+    const submitBtn = document.getElementById("btn-submit-update-password");
+    const errorMsg = document.getElementById("update-password-error");
+    const currentInput = document.getElementById("current-password-input");
+    const newInput = document.getElementById("new-password-input");
+    const confirmInput = document.getElementById("confirm-password-input");
+
+    function openModal() {
+        modal.classList.remove("hidden");
+        errorMsg.textContent = "";
+        currentInput.value = "";
+        newInput.value = "";
+        confirmInput.value = "";
+        currentInput.focus();
+    }
+
+    function closeModal() {
+        modal.classList.add("hidden");
+    }
+
+    openBtn.addEventListener("click", openModal);
+    cancelBtn.addEventListener("click", closeModal);
+
+    // Close on backdrop click
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    submitBtn.addEventListener("click", async () => {
+        errorMsg.textContent = "";
+        const currentPwd = currentInput.value.trim();
+        const newPwd = newInput.value.trim();
+        const confirmPwd = confirmInput.value.trim();
+
+        if (!currentPwd || !newPwd || !confirmPwd) {
+            errorMsg.textContent = "Please fill in all fields.";
+            return;
+        }
+        if (newPwd.length < 4) {
+            errorMsg.textContent = "New password must be at least 4 characters.";
+            return;
+        }
+        if (newPwd !== confirmPwd) {
+            errorMsg.textContent = "New passwords do not match.";
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving...";
+
+        try {
+            const res = await apiFetch("/api/auth/update-password", {
+                method: "POST",
+                body: JSON.stringify({
+                    current_password: currentPwd,
+                    new_password: newPwd
+                })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                errorMsg.textContent = data.detail || "Failed to update password.";
+                return;
+            }
+
+            alert("✅ Password updated successfully!");
+            closeModal();
+        } catch (err) {
+            console.error("Update password error:", err);
+            errorMsg.textContent = "Server error. Please try again.";
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Save";
+        }
+    });
+});

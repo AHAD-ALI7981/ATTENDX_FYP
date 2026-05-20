@@ -100,10 +100,11 @@ function generateRandomPassword(role) {
 }
 
 async function createUser(role) {
+    const fullName = document.getElementById(`admin-${role}-name`).value.trim();
     const username = document.getElementById(`admin-${role}-username`).value.trim();
     const password = document.getElementById(`admin-${role}-password`).value.trim();
 
-    if (!username || !password) {
+    if (!fullName || !username || !password) {
         alert(`Please fill in all fields for the ${role}.`);
         return;
     }
@@ -111,7 +112,7 @@ async function createUser(role) {
     try {
         const res = await apiFetch("/api/admin/users", {
             method: "POST",
-            body: JSON.stringify({ username, password, role }),
+            body: JSON.stringify({ username, full_name: fullName, password, role }),
         });
 
         const data = await res.json();
@@ -121,6 +122,7 @@ async function createUser(role) {
         }
 
         alert(data.message);
+        document.getElementById(`admin-${role}-name`).value = "";
         document.getElementById(`admin-${role}-username`).value = "";
         generateRandomPassword(role); // Generate a fresh password for the next user
         loadUsers();
@@ -209,12 +211,10 @@ async function loadUsers() {
                 row.innerHTML = `
                     <td>${u.id}</td>
                     <td>${u.username}</td>
+                    <td>${u.full_name || '-'}</td>
                     <td><span style="padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; background: rgba(255,255,255,0.1);">${u.role}</span></td>
                     <td>
-                        <span style="font-family: monospace; letter-spacing: 1px; color: var(--accent);">${u.plain_password || '********'}</span>
-                    </td>
-                    <td>
-                        <button class="action-icon edit" onclick="openEditModal(${u.id}, '${u.role}', '${u.plain_password || ''}')"><i class="ri-edit-line"></i></button>
+                        <button class="action-icon edit" onclick="openEditModal(${u.id}, '${u.role}', '${(u.full_name || '').replace(/'/g, "\\'")}')"><i class="ri-edit-line"></i></button>
                         <button class="action-icon delete" onclick="deleteUser(${u.id}, '${u.username}')"><i class="ri-delete-bin-line"></i></button>
                     </td>
                 `;
@@ -231,15 +231,17 @@ async function loadUsers() {
     }
 }
 
-function openEditModal(id, role, plainPassword) {
+function openEditModal(id, role, fullName) {
     document.getElementById("edit-user-id").value = id;
+    document.getElementById("edit-user-name").value = fullName || "";
     document.getElementById("edit-user-role").value = role;
-    document.getElementById("edit-user-password").value = plainPassword;
+    document.getElementById("edit-user-password").value = "";
     editModal.classList.remove("hidden");
 }
 
 async function saveUserEdit() {
     const id = document.getElementById("edit-user-id").value;
+    const fullName = document.getElementById("edit-user-name").value.trim();
     const role = document.getElementById("edit-user-role").value;
     const password = document.getElementById("edit-user-password").value.trim();
 
@@ -247,6 +249,7 @@ async function saveUserEdit() {
         const res = await apiFetch(`/api/admin/users/${id}`, {
             method: "PUT",
             body: JSON.stringify({ 
+                full_name: fullName || null,
                 role,
                 password: password || null
             }),

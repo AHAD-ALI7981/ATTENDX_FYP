@@ -6,6 +6,7 @@ from datetime import date
 # ---- Auth ----
 class RegisterRequest(BaseModel):
     username: str
+    full_name: Optional[str] = None
     email: Optional[str] = None
     password: str
     role: str  # admin, teacher, student
@@ -17,17 +18,22 @@ class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
 
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
 class UserResponse(BaseModel):
     id: int
     username: str
+    full_name: Optional[str] = None
     email: Optional[str] = None
     role: str
-    plain_password: Optional[str] = None
 
     class Config:
         from_attributes = True
 
 class UserUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
     role: Optional[str] = None
     password: Optional[str] = None
 

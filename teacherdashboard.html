@@ -41,6 +41,29 @@
         <main class="main-content">
             <div class="dashboard-header" style="margin-bottom: 30px;">
                 <h2 id="welcome-msg">Welcome, TEACHER</h2>
+                <button id="btn-open-update-password" class="secondary-btn" style="padding: 8px 18px; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-lock-password-line"></i> Update Password
+                </button>
+            </div>
+
+            <!-- Update Password Modal -->
+            <div id="update-password-modal" class="modal-overlay hidden">
+                <div class="modal-content">
+                    <div class="card" style="border-left: 5px solid var(--accent);">
+                        <h4><i class="ri-lock-password-line"></i> Update Password</h4>
+                        <p class="hint">Enter your current password and choose a new one.</p>
+                        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px;">
+                            <input type="password" id="current-password-input" placeholder="Current Password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem; color: var(--white); background: var(--input-bg); outline: none;">
+                            <input type="password" id="new-password-input" placeholder="New Password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem; color: var(--white); background: var(--input-bg); outline: none;">
+                            <input type="password" id="confirm-password-input" placeholder="Confirm New Password" style="width: 100%; padding: 12px 16px; border: 1px solid var(--glass-border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.95rem; color: var(--white); background: var(--input-bg); outline: none;">
+                            <p id="update-password-error" style="color: var(--danger); font-size: 0.85rem; min-height: 20px;"></p>
+                            <div style="display: flex; gap: 10px;">
+                                <button id="btn-submit-update-password" class="action-btn" style="flex: 1;">Save</button>
+                                <button id="btn-cancel-update-password" class="secondary-btn" style="flex: 1;">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="dashboard-content" style="margin-top: 0;">
                 
@@ -90,6 +113,11 @@
                     <div class="card" style="border-left: 5px solid #e74c3c; margin-bottom: 20px;">
                         <h4>Facial Scan Attendance</h4>
                         <p class="hint">Auto-mark attendance via camera.</p>
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <select id="mark-attendance-course-select" style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); width: 100%;">
+                                <option value="" disabled selected>Select Course</option>
+                            </select>
+                        </div>
                         <video id="camera-stream" autoplay playsinline></video>
                         <button class="action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">SCAN FACE</button>
                         <p id="scan-result" style="margin-top: 10px; min-height: 20px;"></p>
@@ -105,22 +133,64 @@
 
                 <!-- Reports Tab -->
                 <div id="reports-tab" class="tab-content">
-                    <div class="card">
-                        <h4>Reports</h4>
-                        <div class="input-group" style="align-items: center;">
-                            <label style="color: var(--white-soft); margin-right: 10px;">Daily Sheet Date:</label>
-                            <input type="date" id="report-date-picker">
-                            <button class="action-btn">View Daily Sheet</button>
+                    <!-- Course Selector -->
+                    <div class="card" style="border-left: 5px solid var(--accent);">
+                        <h4><i class="ri-file-chart-line" style="margin-right: 6px;"></i>Attendance Report</h4>
+                        <p class="hint">Select a course to generate detailed attendance report with shortage analysis.</p>
+                        <div class="input-group" style="align-items: center; margin-bottom: 0;">
+                            <select id="report-course-select" style="flex: 2;">
+                                <option value="" disabled selected>Select Course...</option>
+                            </select>
+                            <button id="btn-generate-report" class="action-btn" style="flex: 1; max-width: 220px;">Generate Report</button>
                         </div>
-                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid rgba(255, 255, 255, 0.15);">
-                        <button class="action-btn">View Detailed Course Report</button>
-                        <div id="teacher-report-area" style="overflow-x:auto; margin-top: 15px;"></div>
+                    </div>
+
+                    <!-- Report Stats Summary (hidden initially) -->
+                    <div id="report-summary-area" style="display: none;">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                            <div class="card" style="text-align: center; padding: 18px; margin-bottom: 0;">
+                                <div style="font-size: 0.75rem; color: var(--white-muted); text-transform: uppercase; letter-spacing: 1px;">Total Classes</div>
+                                <div id="stat-total-classes" style="font-size: 1.8rem; font-weight: 700; color: var(--accent); margin-top: 4px;">0</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 18px; margin-bottom: 0;">
+                                <div style="font-size: 0.75rem; color: var(--white-muted); text-transform: uppercase; letter-spacing: 1px;">Total Students</div>
+                                <div id="stat-total-students" style="font-size: 1.8rem; font-weight: 700; color: var(--purple); margin-top: 4px;">0</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 18px; margin-bottom: 0;">
+                                <div style="font-size: 0.75rem; color: var(--white-muted); text-transform: uppercase; letter-spacing: 1px;">Credit Hours</div>
+                                <div id="stat-credit-hours" style="font-size: 1.8rem; font-weight: 700; color: var(--success); margin-top: 4px;">3</div>
+                            </div>
+                            <div class="card" style="text-align: center; padding: 18px; margin-bottom: 0;">
+                                <div style="font-size: 0.75rem; color: var(--white-muted); text-transform: uppercase; letter-spacing: 1px;">Shortage</div>
+                                <div id="stat-shortage" style="font-size: 1.8rem; font-weight: 700; color: var(--danger); margin-top: 4px;">0</div>
+                            </div>
+                        </div>
+
+                        <!-- Course Meta Info Bar -->
+                        <div class="card" style="padding: 15px 20px; margin-bottom: 20px; background: rgba(96, 165, 250, 0.08); border: 1px solid rgba(96, 165, 250, 0.25);">
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; font-size: 0.9rem;">
+                                <span><i class="ri-building-2-line" style="color: var(--accent); margin-right: 4px;"></i> <strong id="meta-class">—</strong></span>
+                                <span><i class="ri-book-open-line" style="color: var(--purple); margin-right: 4px;"></i> <strong id="meta-course">—</strong></span>
+                                <span><i class="ri-user-star-line" style="color: var(--success); margin-right: 4px;"></i> <strong id="meta-teacher">—</strong></span>
+                                <span><i class="ri-calendar-line" style="color: var(--white-muted); margin-right: 4px;"></i> <strong id="meta-date">—</strong></span>
+                                <button id="btn-download-pdf" class="secondary-btn" style="margin-left: auto; padding: 8px 18px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                                    <i class="ri-download-2-line"></i> Download PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Report Table -->
+                        <div class="card">
+                            <div id="teacher-report-area" style="overflow-x: auto;"></div>
+                        </div>
                     </div>
                 </div>
 
             </div>
         </main>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/teacher.js"></script>
 </body>

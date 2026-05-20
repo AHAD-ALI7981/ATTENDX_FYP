@@ -68,8 +68,8 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Username</th>
+                                        <th>Name</th>
                                         <th>Role</th>
-                                        <th>Password</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -92,6 +92,10 @@
                         <div class="card form-group" style="border-left: 5px solid #3498db; margin: 0;">
                             <h4>Create Teacher Account</h4>
                             <div class="input-group">
+                                <input type="text" id="admin-teacher-name"
+                                    placeholder="Full Name (e.g., Dr. Ahmed Khan)">
+                            </div>
+                            <div class="input-group">
                                 <input type="text" id="admin-teacher-username"
                                     placeholder="Username (e.g., teacher_math)">
                                 <div style="display: flex; gap: 5px; flex: 1;">
@@ -109,6 +113,10 @@
                         <!-- Create Student Card -->
                         <div class="card form-group" style="border-left: 5px solid #e74c3c; margin: 0;">
                             <h4>Create Student Account</h4>
+                            <div class="input-group">
+                                <input type="text" id="admin-student-name"
+                                    placeholder="Full Name (e.g., Ahad Ali)">
+                            </div>
                             <div class="input-group">
                                 <input type="text" id="admin-student-username"
                                     placeholder="Username (e.g., 2022-ag-7981)">
@@ -209,7 +217,12 @@
                         <h4>Create New Course Definition</h4>
                         <div class="input-group" style="flex-direction: column; gap: 15px;">
                             <input type="text" id="admin-course-def-id" placeholder="Course ID (e.g., MTH101)">
-                            <input type="number" id="admin-course-def-credits" placeholder="Credit Hours" value="3">
+                            <select id="admin-course-def-credits" style="padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;">
+                                <option value="1" style="color: black;">1</option>
+                                <option value="2" style="color: black;">2</option>
+                                <option value="3" style="color: black;" selected>3</option>
+                                <option value="4" style="color: black;">4</option>
+                            </select>
                             <textarea id="admin-course-def-desc" placeholder="Course Description" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); min-height: 80px;"></textarea>
                         </div>
                         <button class="action-btn" id="btn-create-course-def" style="margin-top: 20px;">Create Course Definition</button>
@@ -239,8 +252,9 @@
             <h4>Edit User</h4>
             <div class="input-group" style="flex-direction: column;">
                 <input type="hidden" id="edit-user-id">
+                <input type="text" id="edit-user-name" placeholder="Full Name">
                 <div style="display: flex; gap: 5px; width: 100%;">
-                    <input type="text" id="edit-user-password" placeholder="New Password" style="flex-grow: 1;">
+                    <input type="text" id="edit-user-password" placeholder="New Password (leave blank to keep)" style="flex-grow: 1;">
                     <button class="secondary-btn" id="btn-generate-edit-password" style="padding: 12px; min-width: auto;" title="Generate Password">
                         <i class="ri-key-line"></i>
                     </button>
