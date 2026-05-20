@@ -156,6 +156,10 @@ class ReportItem(BaseModel):
 class StudentAttendanceResponse(BaseModel):
     student_id: str
     student_name: str
+    class_name: str
+    subject: str
+    teacher_name: str
+    credit_hours: int
     total_classes: int
     present: int
     percentage: float

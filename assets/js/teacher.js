@@ -140,7 +140,7 @@ async function loadStudentsList() {
         students.forEach((s) => {
             const opt = document.createElement("option");
             opt.value = s.id;
-            opt.textContent = s.username;
+            opt.textContent = s.full_name || s.username;
             select.appendChild(opt);
         });
     } catch (err) {
@@ -436,7 +436,9 @@ async function generateFullReport() {
 
         // Fill metadata bar
         document.getElementById("meta-class").textContent = meta.class_name;
-        document.getElementById("meta-course").textContent = `${meta.course_code} — ${meta.subject}`;
+        document.getElementById("meta-course").textContent = meta.course_code && meta.course_code !== meta.subject
+            ? `${meta.course_code} — ${meta.subject}`
+            : meta.subject;
         document.getElementById("meta-teacher").textContent = meta.teacher_name;
         document.getElementById("meta-date").textContent = meta.report_date;
 

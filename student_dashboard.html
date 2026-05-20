@@ -21,6 +21,9 @@
                 <button class="nav-item active" data-target="attendance-tab">
                     <i class="ri-bar-chart-box-line"></i> My Attendance
                 </button>
+                <button class="nav-item" data-target="my-courses-tab">
+                    <i class="ri-book-2-line"></i> My Courses
+                </button>
             </nav>
             <div class="sidebar-footer">
                 <button class="logout-btn sidebar-logout"><i class="ri-logout-box-r-line"></i> Logout</button>
@@ -77,9 +80,20 @@
                     </div>
                 </div>
 
+                <!-- My Courses Tab -->
+                <div id="my-courses-tab" class="tab-content">
+                    <div class="card">
+                        <h4>My Enrolled Courses</h4>
+                        <p class="hint" style="margin-bottom: 15px;">Download your attendance sheet for any enrolled course.</p>
+                        <div id="student-courses-list"></div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/student.js"></script>
 </body>

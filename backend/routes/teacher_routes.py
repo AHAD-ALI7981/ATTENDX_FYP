@@ -51,7 +51,7 @@ def get_student_users(
     """Get all student user accounts for the enrollment dropdown."""
     students = db.query(User).filter(User.role == "student").all()
     return [
-        {"id": s.id, "username": s.username}
+        {"id": s.id, "username": s.username, "full_name": s.full_name}
         for s in students
     ]
 
@@ -91,17 +91,19 @@ def enroll_student(
     if encoding is None:
         raise HTTPException(400, "No face detected in the image. Please try again with a clear face photo.")
 
+    student_name = student_user.full_name or student_user.username
+
     # Save enrollment with face encoding, linked to user account
     enrollment = Enrollment(
         student_id=student_user.username,
-        student_name=student_user.username,
+        student_name=student_name,
         user_id=student_user.id,
         course_id=req.course_id,
         face_encoding=encoding_to_json(encoding),
     )
     db.add(enrollment)
     db.commit()
-    return {"message": f"Student {student_user.username} enrolled successfully with face data"}
+    return {"message": f"Student {student_name} enrolled successfully with face data"}
 
 
 # ---------- Face Scan Attendance ----------
@@ -230,10 +232,20 @@ def get_enrolled_students(
 ):
     """Get all enrolled students in a course (for manual attendance form)."""
     enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
-    return [
-        {"student_id": e.student_id, "student_name": e.student_name}
-        for e in enrollments
-    ]
+
+    result = []
+    for e in enrollments:
+        student_name = e.student_name
+        if not student_name or student_name == e.student_id:
+            student_user = db.query(User).filter(User.id == e.user_id).first() if e.user_id else None
+            if student_user:
+                student_name = student_user.full_name or student_user.username
+            else:
+                student_name = e.student_id
+
+        result.append({"student_id": e.student_id, "student_name": student_name})
+
+    return result
 
 
 # ---------- Daily Attendance Sheet ----------
@@ -348,9 +360,17 @@ def get_full_course_report(
         if is_short:
             shortage_count += 1
 
+        student_name = e.student_name
+        if not student_name or student_name == e.student_id:
+            student_user = db.query(User).filter(User.id == e.user_id).first() if e.user_id else None
+            if student_user:
+                student_name = student_user.full_name or student_user.username
+            else:
+                student_name = e.student_id
+
         students.append({
             "student_id": e.student_id,
-            "student_name": e.student_name,
+            "student_name": student_name,
             "total_classes": total_dates,
             "present": present_count,
             "absent": total_dates - present_count,

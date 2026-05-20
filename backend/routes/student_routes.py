@@ -29,7 +29,13 @@ def get_enrolled_courses(
 
     courses = db.query(Course).filter(Course.id.in_(enrolled_course_ids)).all()
     return [
-        {"id": c.id, "class_name": c.class_name, "subject": c.subject}
+        {
+            "id": c.id,
+            "class_name": c.class_name,
+            "subject": c.subject,
+            "teacher_name": (c.teacher.full_name or c.teacher.username) if c.teacher else "Unknown",
+            "credit_hours": c.course_def.credit_hours if c.course_def else 3,
+        }
         for c in courses
     ]
 
@@ -79,6 +85,10 @@ def check_attendance(
     return StudentAttendanceResponse(
         student_id=enrollment.student_id,
         student_name=enrollment.student_name,
+        class_name=enrollment.course.class_name,
+        subject=enrollment.course.subject,
+        teacher_name=(enrollment.course.teacher.full_name or enrollment.course.teacher.username) if enrollment.course.teacher else "Unknown",
+        credit_hours=enrollment.course.course_def.credit_hours if enrollment.course.course_def else 3,
         total_classes=total_classes,
         present=present_count,
         percentage=round(percentage, 1),
