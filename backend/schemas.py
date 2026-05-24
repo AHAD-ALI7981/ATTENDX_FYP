@@ -10,6 +10,7 @@ class RegisterRequest(BaseModel):
     email: Optional[str] = None
     password: str
     role: str  # admin, teacher, student
+    class_id: Optional[int] = None
 
 class ForgotPasswordRequest(BaseModel):
     email: str
@@ -28,6 +29,8 @@ class UserResponse(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
     role: str
+    class_id: Optional[int] = None
+    class_name: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -36,6 +39,7 @@ class UserUpdateRequest(BaseModel):
     full_name: Optional[str] = None
     role: Optional[str] = None
     password: Optional[str] = None
+    class_id: Optional[int] = None
 
 class PaginatedUserResponse(BaseModel):
     total: int

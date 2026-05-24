@@ -25,9 +25,6 @@
                 <button class="nav-item" data-target="create-user-tab">
                     <i class="ri-user-add-line"></i> Create User
                 </button>
-                <button class="nav-item" data-target="allocated-courses-tab">
-                    <i class="ri-book-2-line"></i> Allocated Courses
-                </button>
                 <button class="nav-item" data-target="add-course-tab">
                     <i class="ri-folder-add-line"></i> Allot Course
                 </button>
@@ -120,6 +117,11 @@
                             <div class="input-group">
                                 <input type="text" id="admin-student-username"
                                     placeholder="Username (e.g., 2022-ag-7981)">
+                                <select id="admin-student-class" style="flex: 1; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--glass-border); cursor: pointer;">
+                                    <option value="">-- Assign Class (Optional) --</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
                                 <div style="display: flex; gap: 5px; flex: 1;">
                                     <input type="text" id="admin-student-password" placeholder="Password"
                                         style="min-width: 0;">
@@ -131,24 +133,6 @@
                             </div>
                             <button class="action-btn" id="btn-create-student">Create Student</button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Allocated Courses Tab -->
-                <div id="allocated-courses-tab" class="tab-content">
-                    <div class="card">
-                        <h4>Allocated Courses</h4>
-                        <table id="admin-course-table">
-                            <thead>
-                                <tr>
-                                    <th>Class</th>
-                                    <th>Subject</th>
-                                    <th>Teacher</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
                     </div>
                 </div>
 
@@ -175,6 +159,23 @@
                             </select>
                         </div>
                         <button class="action-btn" id="btn-add-course">Allot Course</button>
+                    </div>
+
+                    <div class="card" style="margin-top: 10px;">
+                        <h4>Allocated Courses</h4>
+                        <div style="overflow-x: auto;">
+                            <table id="admin-course-table">
+                                <thead>
+                                    <tr>
+                                        <th>Class</th>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -218,10 +219,10 @@
                         <div class="input-group" style="flex-direction: column; gap: 15px;">
                             <input type="text" id="admin-course-def-id" placeholder="Course ID (e.g., MTH101)">
                             <select id="admin-course-def-credits" style="padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;">
-                                <option value="1" style="color: black;">1</option>
-                                <option value="2" style="color: black;">2</option>
-                                <option value="3" style="color: black;" selected>3</option>
-                                <option value="4" style="color: black;">4</option>
+                                <option value="1" style="color: black;">1(1-0)</option>
+                                <option value="2" style="color: black;">2(2-0)</option>
+                                <option value="3" style="color: black;" selected>3(3-0)</option>
+                                <option value="4" style="color: black;">4(4-0)</option>
                             </select>
                             <textarea id="admin-course-def-desc" placeholder="Course Description" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); min-height: 80px;"></textarea>
                         </div>
@@ -264,6 +265,10 @@
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
                     <option value="admin">Admin</option>
+                </select>
+                <select id="edit-user-class"
+                    style="padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); margin-top: 5px; display: none;">
+                    <option value="">-- Assign Class (Optional) --</option>
                 </select>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">

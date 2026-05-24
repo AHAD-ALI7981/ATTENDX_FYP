@@ -6,6 +6,7 @@
 let selectedCourseId = null;
 let enrollStream = null; 
 let attendanceStream = null; 
+let allStudents = []; 
 
 document.addEventListener("DOMContentLoaded", async () => {
     const isAuthenticated = await requireAuth();
@@ -37,6 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     loadMyCourses();
     loadStudentsList();
+    loadEnrollClasses();
     setupEnrollmentCamera();
     setupButtons();
 
@@ -102,49 +104,139 @@ async function loadMyCourses() {
         }
 
         courses.forEach((c) => {
-            const btn = document.createElement("button");
-            btn.className = "secondary-btn";
-            btn.textContent = `${c.class_name} — ${c.subject}`;
-            btn.style.margin = "5px";
-            btn.addEventListener("click", () => selectCourse(c.id, btn));
-            container.appendChild(btn);
+            const card = document.createElement("div");
+            card.className = "course-card";
+            card.dataset.courseId = c.id;
+            card.innerHTML = `
+                <div class="course-card-header">
+                    <div class="course-card-title">
+                        <i class="ri-book-2-line" style="color: var(--accent); font-size: 1.1rem;"></i>
+                        <div>
+                            <div style="font-weight: 600; color: #fff; font-size: 0.95rem; line-height: 1.3;">${c.class_name}</div>
+                            <div style="font-size: 0.82rem; color: var(--white-muted); margin-top: 2px;">${c.subject}</div>
+                        </div>
+                    </div>
+                    <i class="ri-arrow-down-s-line course-card-chevron"></i>
+                </div>
+                <div class="course-card-meta">
+                    <div class="course-meta-grid">
+                        <div class="course-meta-item">
+                            <i class="ri-hashtag" style="color: var(--accent);"></i>
+                            <div>
+                                <span class="meta-label">Course Code</span>
+                                <span class="meta-value">${c.course_code}</span>
+                            </div>
+                        </div>
+                        <div class="course-meta-item">
+                            <i class="ri-time-line" style="color: var(--purple);"></i>
+                            <div>
+                                <span class="meta-label">Credit Hours</span>
+                                <span class="meta-value">${c.credit_hours}</span>
+                            </div>
+                        </div>
+                        <div class="course-meta-item">
+                            <i class="ri-user-star-line" style="color: var(--success);"></i>
+                            <div>
+                                <span class="meta-label">Teacher</span>
+                                <span class="meta-value">${c.teacher_name}</span>
+                            </div>
+                        </div>
+                        <div class="course-meta-item">
+                            <i class="ri-group-line" style="color: #f59e0b;"></i>
+                            <div>
+                                <span class="meta-label">Enrolled Students</span>
+                                <span class="meta-value">${c.enrolled_count}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            card.addEventListener("click", () => selectCourse(c.id, card));
+            container.appendChild(card);
         });
     } catch (err) {
         console.error("Failed to load courses:", err);
     }
 }
 
-function selectCourse(courseId, btnElement) {
+function selectCourse(courseId, cardElement) {
     selectedCourseId = courseId;
-    document.querySelectorAll("#teacher-course-list .secondary-btn").forEach((b) => {
-        b.style.background = "";
-        b.style.color = "";
+
+    // Collapse all other cards and deselect
+    document.querySelectorAll("#teacher-course-list .course-card").forEach((c) => {
+        if (c !== cardElement) {
+            c.classList.remove("expanded");
+        }
     });
-    btnElement.style.background = "rgba(96, 165, 250, 0.3)";
-    btnElement.style.color = "#fff";
+
+    // Toggle the clicked card
+    cardElement.classList.toggle("expanded");
+
     loadEnrolledStudents();
 }
 
 
-// ==================== STUDENTS LIST ====================
+// ==================== STUDENTS & CLASSES ====================
+async function loadEnrollClasses() {
+    try {
+        const res = await apiFetch("/api/teacher/classes");
+        if (!res.ok) return;
+
+        const classes = await res.json();
+        const select = document.getElementById("enroll-class-select");
+        if (!select) return;
+
+        select.innerHTML = '<option value="" disabled selected>Select Class to filter students (Optional)...</option><option value="ALL">All Classes (No Filter)</option>';
+        classes.forEach((c) => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.class_id} — ${c.class_name}`;
+            select.appendChild(opt);
+        });
+
+        select.addEventListener("change", (e) => {
+            filterStudentDropdown(e.target.value);
+        });
+    } catch (err) {
+        console.error("Failed to load classes:", err);
+    }
+}
+
 async function loadStudentsList() {
     try {
         const res = await apiFetch("/api/teacher/students-list");
         if (!res.ok) return;
 
-        const students = await res.json();
-        const select = document.getElementById("enroll-student-select");
-        if (!select) return;
+        allStudents = await res.json();
+        filterStudentDropdown("ALL"); // Initially show all or none based on preference
+    } catch (err) {
+        console.error("Failed to load students list:", err);
+    }
+}
 
-        select.innerHTML = '<option value="" disabled selected>Select Student</option>';
-        students.forEach((s) => {
+function filterStudentDropdown(classId) {
+    const select = document.getElementById("enroll-student-select");
+    if (!select) return;
+
+    select.innerHTML = '<option value="" disabled selected>Select Student</option>';
+    
+    let filtered = allStudents;
+    if (classId !== "ALL" && classId) {
+        filtered = allStudents.filter(s => s.class_id == classId);
+    }
+
+    if (filtered.length === 0) {
+        const opt = document.createElement("option");
+        opt.disabled = true;
+        opt.textContent = "No students found in this class";
+        select.appendChild(opt);
+    } else {
+        filtered.forEach((s) => {
             const opt = document.createElement("option");
             opt.value = s.id;
             opt.textContent = s.full_name || s.username;
             select.appendChild(opt);
         });
-    } catch (err) {
-        console.error("Failed to load students list:", err);
     }
 }
 
@@ -307,12 +399,30 @@ async function scanFace() {
         });
 
         const data = await res.json();
+        
+        const overlay = document.getElementById("video-overlay");
+        const overlayText = document.getElementById("video-overlay-text");
+        
         if (data.matched) {
             resultText.textContent = data.message;
             resultText.style.color = "#34d399";
+            if (overlay && overlayText) {
+                overlayText.textContent = "✅ " + data.message;
+                overlayText.style.color = "#34d399";
+                overlayText.style.background = "rgba(6, 78, 59, 0.8)";
+                overlay.style.opacity = "1";
+                setTimeout(() => overlay.style.opacity = "0", 3000);
+            }
         } else {
             resultText.textContent = data.message;
             resultText.style.color = "#f87171";
+            if (overlay && overlayText) {
+                overlayText.textContent = "❌ " + data.message;
+                overlayText.style.color = "#f87171";
+                overlayText.style.background = "rgba(127, 29, 29, 0.8)";
+                overlay.style.opacity = "1";
+                setTimeout(() => overlay.style.opacity = "0", 3000);
+            }
         }
     } catch (err) {
         console.error(err);
@@ -356,8 +466,14 @@ async function loadEnrolledStudents() {
 }
 
 async function saveManualAttendance() {
+    const statusText = document.getElementById("manual-attendance-status");
+    if (statusText) statusText.textContent = ""; // Clear old message
+
     if (!selectedCourseId) {
-        alert("Please select a course first from My Courses.");
+        if (statusText) {
+            statusText.textContent = "Please select a course first from My Courses.";
+            statusText.style.color = "#f87171";
+        }
         return;
     }
     const selects = document.querySelectorAll("#manual-student-list select");
@@ -370,7 +486,10 @@ async function saveManualAttendance() {
     });
 
     if (records.length === 0) {
-        alert("No students to mark attendance for.");
+        if (statusText) {
+            statusText.textContent = "No students to mark attendance for.";
+            statusText.style.color = "#f87171";
+        }
         return;
     }
 
@@ -388,13 +507,22 @@ async function saveManualAttendance() {
 
         const data = await res.json();
         if (!res.ok) {
-            alert(data.detail || "Failed to save attendance");
+            if (statusText) {
+                statusText.textContent = data.detail || "Failed to save attendance";
+                statusText.style.color = "#f87171";
+            }
             return;
         }
-        alert(data.message);
+        if (statusText) {
+            statusText.textContent = "✅ " + data.message;
+            statusText.style.color = "#34d399";
+        }
     } catch (err) {
         console.error(err);
-        alert("Server error saving attendance.");
+        if (statusText) {
+            statusText.textContent = "❌ Server error saving attendance.";
+            statusText.style.color = "#f87171";
+        }
     }
 }
 

@@ -29,17 +29,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (targetTab) {
                 targetTab.classList.add('active');
                 // Refresh data based on which tab is opened
-                if (targetId === "add-course-tab") {
+                if (targetId === "create-user-tab") {
+                    loadClassesToSelect("admin-student-class");
+                } else if (targetId === "add-course-tab") {
                     loadClassesForDropdown();
                     loadCourseDefsForDropdown();
                     loadTeachersToSelect("admin-teacher-select");
+                    loadCourses();
                 } else if (targetId === "create-class-tab") {
                     loadTeachersToSelect("admin-class-teacher-select");
                     loadClasses();
                 } else if (targetId === "create-course-tab") {
                     loadCourseDefs();
-                } else if (targetId === "allocated-courses-tab") {
-                    loadCourses();
                 }
             }
         });
@@ -109,10 +110,16 @@ async function createUser(role) {
         return;
     }
 
+    const payload = { username, full_name: fullName, password, role };
+    if (role === "student") {
+        const classId = document.getElementById("admin-student-class").value;
+        if (classId) payload.class_id = parseInt(classId);
+    }
+
     try {
         const res = await apiFetch("/api/admin/users", {
             method: "POST",
-            body: JSON.stringify({ username, full_name: fullName, password, role }),
+            body: JSON.stringify(payload),
         });
 
         const data = await res.json();
@@ -160,6 +167,17 @@ if (roleFilter) {
     roleFilter.addEventListener("change", () => {
         currentPage = 1;
         loadUsers();
+    });
+}
+if (document.getElementById("edit-user-role")) {
+    document.getElementById("edit-user-role").addEventListener("change", (e) => {
+        const classSelect = document.getElementById("edit-user-class");
+        if (e.target.value === "student") {
+            classSelect.style.display = "block";
+            loadClassesToSelect("edit-user-class", classSelect.dataset.currentClass);
+        } else {
+            classSelect.style.display = "none";
+        }
     });
 }
 if (prevBtn) {
@@ -212,9 +230,12 @@ async function loadUsers() {
                     <td>${u.id}</td>
                     <td>${u.username}</td>
                     <td>${u.full_name || '-'}</td>
-                    <td><span style="padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; background: rgba(255,255,255,0.1);">${u.role}</span></td>
                     <td>
-                        <button class="action-icon edit" onclick="openEditModal(${u.id}, '${u.role}', '${(u.full_name || '').replace(/'/g, "\\'")}')"><i class="ri-edit-line"></i></button>
+                        <span style="padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; background: rgba(255,255,255,0.1); margin-right: 5px;">${u.role}</span>
+                        ${u.role === 'student' && u.class_name ? `<span style="padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; background: rgba(96, 165, 250, 0.2); color: var(--accent);">${u.class_name}</span>` : ''}
+                    </td>
+                    <td>
+                        <button class="action-icon edit" onclick="openEditModal(${u.id}, '${u.role}', '${(u.full_name || '').replace(/'/g, "\\'")}', '${u.class_id || ''}')"><i class="ri-edit-line"></i></button>
                         <button class="action-icon delete" onclick="deleteUser(${u.id}, '${u.username}')"><i class="ri-delete-bin-line"></i></button>
                     </td>
                 `;
@@ -231,11 +252,21 @@ async function loadUsers() {
     }
 }
 
-function openEditModal(id, role, fullName) {
+function openEditModal(id, role, fullName, classId) {
     document.getElementById("edit-user-id").value = id;
     document.getElementById("edit-user-name").value = fullName || "";
     document.getElementById("edit-user-role").value = role;
     document.getElementById("edit-user-password").value = "";
+    
+    const classSelect = document.getElementById("edit-user-class");
+    if (role === "student") {
+        classSelect.style.display = "block";
+        classSelect.dataset.currentClass = classId || "";
+        loadClassesToSelect("edit-user-class", classId);
+    } else {
+        classSelect.style.display = "none";
+    }
+
     editModal.classList.remove("hidden");
 }
 
@@ -245,14 +276,21 @@ async function saveUserEdit() {
     const role = document.getElementById("edit-user-role").value;
     const password = document.getElementById("edit-user-password").value.trim();
 
+    const payload = { 
+        full_name: fullName || null,
+        role,
+        password: password || null
+    };
+
+    if (role === "student") {
+        const classId = document.getElementById("edit-user-class").value;
+        payload.class_id = classId ? parseInt(classId) : null;
+    }
+
     try {
         const res = await apiFetch(`/api/admin/users/${id}`, {
             method: "PUT",
-            body: JSON.stringify({ 
-                full_name: fullName || null,
-                role,
-                password: password || null
-            }),
+            body: JSON.stringify(payload),
         });
 
         const data = await res.json();
@@ -439,12 +477,39 @@ async function loadTeachersToSelect(selectId) {
         data.users.forEach(t => {
             const opt = document.createElement("option");
             opt.value = t.id;
-            opt.textContent = `${t.username} (ID: ${t.id})`;
+            opt.textContent = t.full_name || t.username;
             opt.setAttribute('data-username', t.username);
             select.appendChild(opt);
         });
     } catch (err) {
         console.error("Failed to load teachers for selection:", err);
+    }
+}
+
+
+// ==================== CLASS DROPDOWN ====================
+async function loadClassesToSelect(selectId, selectedId = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    try {
+        const res = await apiFetch("/api/admin/classes");
+        if (!res.ok) return;
+
+        const data = await res.json();
+        select.innerHTML = '<option value="">-- Assign Class (Optional) --</option>';
+        
+        data.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = `${c.class_id} — ${c.class_name}`;
+            if (selectedId && c.id == selectedId) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to load classes for selection:", err);
     }
 }
 

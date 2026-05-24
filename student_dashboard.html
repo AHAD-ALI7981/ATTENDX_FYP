@@ -18,11 +18,11 @@
                 <h2>Student Panel</h2>
             </div>
             <nav class="sidebar-nav">
-                <button class="nav-item active" data-target="attendance-tab">
-                    <i class="ri-bar-chart-box-line"></i> My Attendance
-                </button>
-                <button class="nav-item" data-target="my-courses-tab">
+                <button class="nav-item active" data-target="my-courses-tab">
                     <i class="ri-book-2-line"></i> My Courses
+                </button>
+                <button class="nav-item" data-target="attendance-tab">
+                    <i class="ri-bar-chart-box-line"></i> My Attendance
                 </button>
             </nav>
             <div class="sidebar-footer">
@@ -60,8 +60,17 @@
             </div>
             <div class="dashboard-content" style="margin-top: 0;">
 
+                <!-- My Courses Tab -->
+                <div id="my-courses-tab" class="tab-content active">
+                    <div class="card">
+                        <h4>My Enrolled Courses</h4>
+                        <p class="hint" style="margin-bottom: 15px;">Your enrolled courses are shown below.</p>
+                        <div id="student-courses-list" class="course-list-container"></div>
+                    </div>
+                </div>
+
                 <!-- Attendance Tab -->
-                <div id="attendance-tab" class="tab-content active">
+                <div id="attendance-tab" class="tab-content">
                     <div class="card">
                         <h4>Check Your Attendance</h4>
                         <p class="hint" style="margin-bottom: 15px;">Select an enrolled course to view your attendance record.</p>
@@ -69,7 +78,7 @@
                             <select id="student-course-select">
                                 <option value="" disabled selected>Select Course...</option>
                             </select>
-                            <button class="action-btn" id="btn-check-attendance" style="max-width: 200px;">Check</button>
+                            <button class="action-btn" id="btn-check-attendance" style="max-width: 200px;">Generate Attendance</button>
                         </div>
                     </div>
 
@@ -80,19 +89,10 @@
                     </div>
                 </div>
 
-                <!-- My Courses Tab -->
-                <div id="my-courses-tab" class="tab-content">
-                    <div class="card">
-                        <h4>My Enrolled Courses</h4>
-                        <p class="hint" style="margin-bottom: 15px;">Download your attendance sheet for any enrolled course.</p>
-                        <div id="student-courses-list"></div>
-                    </div>
-                </div>
-
             </div>
         </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/student.js"></script>

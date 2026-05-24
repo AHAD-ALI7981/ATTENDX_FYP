@@ -70,12 +70,7 @@
                 <!-- My Courses Tab -->
                 <div id="my-courses-tab" class="tab-content active">
                     <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="margin: 0;">Your Allocated Courses</h4>
-                            <button class="secondary-btn" style="padding: 8px 12px; font-size: 0.9rem;">
-                                📊 View All Classes Report
-                            </button>
-                        </div>
+                        <h4 style="margin-bottom: 8px;">Your Allocated Courses</h4>
                         <p class="hint">Click on a course to manage attendance</p>
                         <div id="teacher-course-list" class="course-list-container"></div>
                     </div>
@@ -88,6 +83,11 @@
                         <div class="input-group">
                             <select id="enroll-course-select">
                                 <option value="" disabled selected>Select Course</option>
+                            </select>
+                        </div>
+                        <div class="input-group" style="margin-bottom: 15px;">
+                            <select id="enroll-class-select" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.06); color: white; border: 1px solid rgba(255,255,255,0.15); cursor: pointer; margin-bottom: 15px;">
+                                <option value="" disabled selected>Select Class to filter students (Optional)...</option>
                             </select>
                         </div>
                         <div class="input-group">
@@ -118,9 +118,14 @@
                                 <option value="" disabled selected>Select Course</option>
                             </select>
                         </div>
-                        <video id="camera-stream" autoplay playsinline></video>
+                        <div class="camera-box" style="position: relative; margin-bottom: 15px; overflow: hidden; border-radius: var(--radius-md);">
+                            <video id="camera-stream" autoplay playsinline style="width: 100%; display: block; border-radius: inherit;"></video>
+                            <div id="video-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); opacity: 0; transition: opacity 0.3s ease; pointer-events: none;">
+                                <div id="video-overlay-text" style="font-size: 1.2rem; font-weight: bold; text-align: center; padding: 20px; border-radius: 8px;"></div>
+                            </div>
+                        </div>
                         <button class="action-btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">SCAN FACE</button>
-                        <p id="scan-result" style="margin-top: 10px; min-height: 20px;"></p>
+                        <p id="scan-result" style="margin-top: 10px; min-height: 20px; text-align: center; font-weight: 500;"></p>
                     </div>
 
                     <div class="card" style="border-left: 5px solid #f39c12;">
@@ -128,6 +133,7 @@
                         <p class="hint">Mark students as Present or Absent.</p>
                         <div id="manual-student-list" class="manual-list-scroll"></div>
                         <button class="action-btn">Save Manual Attendance</button>
+                        <p id="manual-attendance-status" style="margin-top: 10px; min-height: 20px; text-align: center; font-size: 0.95rem; font-weight: 500;"></p>
                     </div>
                 </div>
 
@@ -189,7 +195,7 @@
             </div>
         </main>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/teacher.js"></script>

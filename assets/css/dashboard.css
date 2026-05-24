@@ -443,9 +443,117 @@ video {
 /* ============== COURSE LIST ============== */
 .course-list-container {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
   margin-top: 10px;
+}
+
+/* ============== COURSE CARDS ============== */
+.course-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.course-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+}
+
+.course-card.expanded {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 8px 30px rgba(96, 165, 250, 0.15);
+  background: rgba(96, 165, 250, 0.06);
+}
+
+.course-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+}
+
+.course-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.course-card-chevron {
+  font-size: 1.2rem;
+  color: var(--white-muted);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.course-card.expanded .course-card-chevron {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+.course-card-meta {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease, opacity 0.3s ease;
+  opacity: 0;
+  padding: 0 18px;
+}
+
+.course-card.expanded .course-card-meta {
+  max-height: 250px;
+  opacity: 1;
+  padding: 0 18px 18px;
+}
+
+.course-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.course-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-meta-item i {
+  font-size: 1rem;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.course-meta-item div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.meta-label {
+  font-size: 0.7rem;
+  color: var(--white-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  line-height: 1.4;
+}
+
+.meta-value {
+  font-size: 0.88rem;
+  color: var(--white);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ============== STUDENT ATTENDANCE RESULT ============== */
@@ -539,6 +647,10 @@ hr {
   }
 
   .course-list-container {
+    grid-template-columns: 1fr;
+  }
+
+  .course-meta-grid {
     grid-template-columns: 1fr;
   }
 

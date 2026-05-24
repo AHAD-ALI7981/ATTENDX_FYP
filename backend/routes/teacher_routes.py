@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User, Course, Enrollment, Attendance
+from models import User, Course, Enrollment, Attendance, Class
 from schemas import (
     EnrollRequest,
     FaceScanRequest,
@@ -36,10 +36,39 @@ def get_my_courses(
     """Get courses assigned to the logged-in teacher."""
     teacher = _get_teacher(db, user["sub"])
     courses = db.query(Course).filter(Course.teacher_id == teacher.id).all()
-    return [
-        {"id": c.id, "class_name": c.class_name, "subject": c.subject}
-        for c in courses
-    ]
+    teacher_name = teacher.full_name or teacher.username
+
+    result = []
+    for c in courses:
+        credit_hours = 3
+        course_code = c.subject
+        if c.course_def:
+            credit_hours = c.course_def.credit_hours or 3
+            course_code = c.course_def.course_id or c.subject
+
+        enrolled_count = db.query(Enrollment).filter(Enrollment.course_id == c.id).count()
+
+        result.append({
+            "id": c.id,
+            "class_name": c.class_name,
+            "subject": c.subject,
+            "course_code": course_code,
+            "credit_hours": credit_hours,
+            "teacher_name": teacher_name,
+            "enrolled_count": enrolled_count,
+        })
+
+    return result
+
+
+@router.get("/classes")
+def get_teacher_classes(
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_role("teacher")),
+):
+    """Get all classes so teacher can filter students."""
+    classes = db.query(Class).all()
+    return [{"id": c.id, "class_name": c.class_name, "class_id": c.class_id} for c in classes]
 
 
 # ---------- Available Students for Enrollment ----------
@@ -51,7 +80,12 @@ def get_student_users(
     """Get all student user accounts for the enrollment dropdown."""
     students = db.query(User).filter(User.role == "student").all()
     return [
-        {"id": s.id, "username": s.username, "full_name": s.full_name}
+        {
+            "id": s.id,
+            "username": s.username,
+            "full_name": s.full_name,
+            "class_id": s.class_id
+        }
         for s in students
     ]
 
@@ -90,6 +124,25 @@ def enroll_student(
     encoding = get_face_encoding(req.face_image)
     if encoding is None:
         raise HTTPException(400, "No face detected in the image. Please try again with a clear face photo.")
+
+    # Prevent face reuse by different students
+    all_enrollments = db.query(Enrollment).all()
+    known_encodings = []
+    enrollment_refs = []
+    
+    for e in all_enrollments:
+        if e.face_encoding:
+            known_encodings.append(json_to_encoding(e.face_encoding))
+            enrollment_refs.append(e)
+            
+    if known_encodings:
+        match_idx = match_face(encoding, known_encodings)
+        if match_idx != -1:
+            matched_enrollment = enrollment_refs[match_idx]
+            # It's fine if the SAME student is enrolling in a second course.
+            # But if the student IDs (usernames) are different, someone is reusing a face.
+            if matched_enrollment.student_id != student_user.username:
+                raise HTTPException(409, f"This face is already registered to another student ({matched_enrollment.student_name}). Each person can only be registered to one account.")
 
     student_name = student_user.full_name or student_user.username
 

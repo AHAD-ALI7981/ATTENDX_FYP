@@ -124,6 +124,7 @@ def create_user(
         email=req.email,
         password_hash=hash_password(req.password),
         role=req.role,
+        class_id=req.class_id if req.role == "student" else None,
     )
     db.add(new_user)
     db.commit()
@@ -154,12 +155,27 @@ def get_users(
     
     users = query.offset((page - 1) * limit).limit(limit).all()
     
+    user_responses = []
+    for u in users:
+        class_name = None
+        if u.class_id and u.class_ref:
+            class_name = u.class_ref.class_id
+        user_responses.append(UserResponse(
+            id=u.id,
+            username=u.username,
+            full_name=u.full_name,
+            email=u.email,
+            role=u.role,
+            class_id=u.class_id,
+            class_name=class_name
+        ))
+    
     return {
         "total": total,
         "page": page,
         "limit": limit,
         "total_pages": total_pages,
-        "users": users
+        "users": user_responses
     }
 
 @router.put("/users/{user_id}")
@@ -181,6 +197,9 @@ def update_user(
         if req.role not in ("teacher", "student", "admin"):
             raise HTTPException(400, "Invalid role")
         target_user.role = req.role
+
+    if req.class_id is not None:
+        target_user.class_id = req.class_id if target_user.role == "student" else None
 
     if req.password is not None:
         target_user.password_hash = hash_password(req.password)

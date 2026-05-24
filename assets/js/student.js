@@ -61,23 +61,56 @@ async function loadStudentCourses() {
             select.appendChild(opt);
 
             const card = document.createElement("div");
-            card.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:16px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.08); border-radius:12px; gap:16px; background:rgba(255,255,255,0.03);";
+            card.className = "course-card";
+            card.dataset.courseId = c.id;
             card.innerHTML = `
-                <div style="min-width:0;">
-                    <div style="font-size:1rem; font-weight:700; margin-bottom:6px; color:#fff;">${c.class_name} — ${c.subject}</div>
-                    <div style="font-size:0.9rem; color:#9ca3af; margin-bottom:4px;">Teacher: ${c.teacher_name || 'Unknown'}</div>
-                    <div style="font-size:0.9rem; color:#9ca3af;">Credit Hours: ${c.credit_hours || 3}</div>
+                <div class="course-card-header">
+                    <div class="course-card-title">
+                        <i class="ri-book-2-line" style="color: var(--accent); font-size: 1.1rem;"></i>
+                        <div>
+                            <div style="font-weight: 600; color: #fff; font-size: 0.95rem; line-height: 1.3;">${c.class_name}</div>
+                            <div style="font-size: 0.82rem; color: var(--white-muted); margin-top: 2px;">${c.subject}</div>
+                        </div>
+                    </div>
+                    <i class="ri-arrow-down-s-line course-card-chevron"></i>
                 </div>
-                <button class="action-btn btn-download-sheet" data-course-id="${c.id}" style="flex-shrink:0; min-width:170px;">Download Attendance Sheet</button>
+                <div class="course-card-meta">
+                    <div class="course-meta-grid">
+                        <div class="course-meta-item">
+                            <i class="ri-hashtag" style="color: var(--accent);"></i>
+                            <div>
+                                <span class="meta-label">Course Code</span>
+                                <span class="meta-value">${c.course_code}</span>
+                            </div>
+                        </div>
+                        <div class="course-meta-item">
+                            <i class="ri-time-line" style="color: var(--purple);"></i>
+                            <div>
+                                <span class="meta-label">Credit Hours</span>
+                                <span class="meta-value">${c.credit_hours}</span>
+                            </div>
+                        </div>
+                        <div class="course-meta-item">
+                            <i class="ri-user-star-line" style="color: var(--success);"></i>
+                            <div>
+                                <span class="meta-label">Teacher</span>
+                                <span class="meta-value">${c.teacher_name}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             `;
-            list.appendChild(card);
-        });
-
-        list.querySelectorAll('.btn-download-sheet').forEach((btn) => {
-            btn.addEventListener('click', () => {
-                const courseId = btn.dataset.courseId;
-                downloadAttendanceSheet(courseId);
+            
+            card.addEventListener("click", () => {
+                document.querySelectorAll("#student-courses-list .course-card").forEach((other) => {
+                    if (other !== card) {
+                        other.classList.remove("expanded");
+                    }
+                });
+                card.classList.toggle("expanded");
             });
+
+            list.appendChild(card);
         });
     } catch (err) {
         console.error("Failed to load enrolled courses:", err);
@@ -104,40 +137,63 @@ async function checkAttendance() {
 
         const reportDiv = document.getElementById("student-report-detail");
         
-        let htmlContext = `<p style="color:var(--white-soft); margin-bottom:10px;">Showing records for <strong>${data.student_name} (${data.student_id})</strong></p>`;
-        
-        htmlContext += `
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:6px;">
-                <div style="text-align:center;">
-                    <div style="font-size:12px; color:#9ca3af;">Total Classes</div>
-                    <div style="font-size:20px; font-weight:600; color:#fff;">${data.total_classes}</div>
+        let htmlContext = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:20px; flex-wrap:wrap;">
+                <div style="min-width:0;">
+                    <div style="font-size:0.9rem; color:#9ca3af; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Attendance Sheet</div>
+                    <div style="font-size:1.35rem; font-weight:700; color:#fff; line-height:1.2;">${data.class_name} — ${data.subject}</div>
+                    <div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px; color:#d1d5db; font-size:0.9rem;">
+                        <span><strong style="color:#fff;">Teacher:</strong> ${data.teacher_name}</span>
+                        <span><strong style="color:#fff;">Credit Hours:</strong> ${data.credit_hours}</span>
+                        <span><strong style="color:#fff;">Date:</strong> ${new Date().toLocaleDateString()}</span>
+                    </div>
                 </div>
-                <div style="text-align:center;">
-                    <div style="font-size:12px; color:#9ca3af;">Present</div>
-                    <div style="font-size:20px; font-weight:600; color:#34d399;">${data.present}</div>
+                <button class="secondary-btn" id="btn-download-attendance-pdf" style="min-width:180px; height:44px; align-self:flex-start; padding: 8px 18px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="ri-download-2-line"></i> Download PDF
+                </button>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:14px; margin-bottom:22px;">
+                <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px;">
+                    <div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Total Classes</div>
+                    <div style="font-size:1.4rem; font-weight:700; color:#fff;">${data.total_classes}</div>
                 </div>
-                <div style="text-align:center;">
-                    <div style="font-size:12px; color:#9ca3af;">Percentage</div>
-                    <div style="font-size:20px; font-weight:600; color:#60a5fa;">${data.percentage}%</div>
+                <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px;">
+                    <div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Present</div>
+                    <div style="font-size:1.4rem; font-weight:700; color:#34d399;">${data.present}</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:16px; padding:18px;">
+                    <div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">Percentage</div>
+                    <div style="font-size:1.4rem; font-weight:700; color:#60a5fa;">${data.percentage}%</div>
                 </div>
             </div>
         `;
 
         // Create detailed history table
-        let table = '<table style="width:100%; text-align:left; border-collapse:collapse;">';
-        table += '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.1);"><th>Date</th><th>Status</th></tr></thead><tbody>';
+        let table = '<table style="width:100%; text-align:left; border-collapse:collapse; color:#fff;">';
+        table += '<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.12);">';
+        table += '<th style="padding:14px 12px; color:#d1d5db; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase;">Date</th>';
+        table += '<th style="padding:14px 12px; color:#d1d5db; font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase;">Status</th>';
+        table += '</tr></thead><tbody>';
         
         if (data.records && data.records.length > 0) {
-            data.records.forEach(r => {
+            data.records.forEach((r, index) => {
+                const rowBg = index % 2 === 0 ? 'background: rgba(255,255,255,0.03);' : '';
                 const color = r.status.toLowerCase() === 'present' ? '#34d399' : '#f87171';
-                table += `<tr><td style="padding:8px 0;">${r.date}</td><td style="padding:8px 0; color:${color}; font-weight:500;">${r.status.toUpperCase()}</td></tr>`;
+                table += `<tr style="${rowBg}">`;
+                table += `<td style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,0.08);">${r.date}</td>`;
+                table += `<td style="padding:14px 12px; border-bottom:1px solid rgba(255,255,255,0.08); color:${color}; font-weight:600;">${r.status.toUpperCase()}</td>`;
+                table += `</tr>`;
             });
         } else {
-            table += '<tr><td colspan="2" style="padding:8px 0; text-align:center; color:#9ca3af;">No attendance records found.</td></tr>';
+            table += '<tr><td colspan="2" style="padding:18px 12px; text-align:center; color:#9ca3af;">No attendance records found.</td></tr>';
         }
         table += '</tbody></table>';
 
         reportDiv.innerHTML = htmlContext + table;
+        const downloadBtn = document.getElementById("btn-download-attendance-pdf");
+        if (downloadBtn) {
+            downloadBtn.addEventListener("click", () => generateAttendancePDF(data));
+        }
         document.getElementById("student-action-area").style.display = "block";
 
     } catch (err) {
@@ -211,6 +267,17 @@ function generateAttendancePDF(data) {
         headStyles: { fillColor: [51, 65, 85], textColor: 255 },
         styles: { textColor: [34, 43, 69], fontSize: 10 },
         columnStyles: { 1: { halign: 'center' } },
+        didParseCell: function (data) {
+            if (data.section === 'body' && data.column.index === 1) {
+                if (data.cell.raw === 'ABSENT') {
+                    data.cell.styles.textColor = [220, 50, 50];
+                    data.cell.styles.fontStyle = 'bold';
+                } else if (data.cell.raw === 'PRESENT') {
+                    data.cell.styles.textColor = [34, 160, 100];
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        }
     });
 
     const fileName = `Attendance_Sheet_${data.class_name.replace(/\s+/g, '_')}_${data.subject.replace(/\s+/g, '_')}.pdf`;

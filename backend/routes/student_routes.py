@@ -28,16 +28,18 @@ def get_enrolled_courses(
         return []
 
     courses = db.query(Course).filter(Course.id.in_(enrolled_course_ids)).all()
-    return [
-        {
+    result = []
+    for c in courses:
+        course_code = c.course_def.course_id if c.course_def else c.subject
+        result.append({
             "id": c.id,
             "class_name": c.class_name,
             "subject": c.subject,
+            "course_code": course_code,
             "teacher_name": (c.teacher.full_name or c.teacher.username) if c.teacher else "Unknown",
             "credit_hours": c.course_def.credit_hours if c.course_def else 3,
-        }
-        for c in courses
-    ]
+        })
+    return result
 
 
 @router.get("/attendance/{course_id}", response_model=StudentAttendanceResponse)
@@ -61,9 +63,12 @@ def check_attendance(
     all_enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
     all_ids = [e.id for e in all_enrollments]
 
-    total_classes = db.query(Attendance.date).filter(
+    # Get all distinct dates for this course where attendance was marked
+    course_dates = db.query(Attendance.date).filter(
         Attendance.enrollment_id.in_(all_ids)
-    ).distinct().count()
+    ).distinct().order_by(Attendance.date.desc()).all()
+
+    total_classes = len(course_dates)
 
     present_count = db.query(Attendance).filter(
         Attendance.enrollment_id == enrollment.id,
@@ -72,15 +77,21 @@ def check_attendance(
 
     percentage = (present_count / total_classes * 100) if total_classes > 0 else 0.0
 
-    # Get detailed attendance records for this student
-    records = db.query(Attendance).filter(
+    # Get the student's explicit attendance records
+    student_records = db.query(Attendance).filter(
         Attendance.enrollment_id == enrollment.id
-    ).order_by(Attendance.date.desc()).all()
+    ).all()
 
-    record_list = [
-        {"date": str(r.date), "status": r.status}
-        for r in records
-    ]
+    # Map date to status
+    status_by_date = {r.date: r.status for r in student_records}
+
+    record_list = []
+    for (d,) in course_dates:
+        # If student has an explicit record, use it; otherwise, they are absent
+        status = status_by_date.get(d, "absent")
+        record_list.append({"date": str(d), "status": status})
+
+    absent_count = total_classes - present_count
 
     return StudentAttendanceResponse(
         student_id=enrollment.student_id,

@@ -20,6 +20,10 @@ class User(Base):
     # Relationship: student -> enrollments
     enrollments = relationship("Enrollment", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
 
+    # Class assignment for students
+    class_id = Column(Integer, ForeignKey("classes.id", ondelete="SET NULL"), nullable=True)
+    class_ref = relationship("Class", foreign_keys=[class_id])
+
 
 class Class(Base):
     __tablename__ = "classes"
