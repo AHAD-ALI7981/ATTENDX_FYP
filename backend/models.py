@@ -56,8 +56,8 @@ class Course(Base):
     subject = Column(String(100), nullable=False)
     teacher_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     # FK links to Class and CourseDefinition
-    class_ref_id = Column(Integer, ForeignKey("classes.id", ondelete="SET NULL"), nullable=True)
-    course_def_id = Column(Integer, ForeignKey("course_definitions.id", ondelete="SET NULL"), nullable=True)
+    class_ref_id = Column(Integer, ForeignKey("classes.id", ondelete="CASCADE"), nullable=True)
+    course_def_id = Column(Integer, ForeignKey("course_definitions.id", ondelete="CASCADE"), nullable=True)
 
     teacher = relationship("User", back_populates="courses")
     class_ref = relationship("Class", back_populates="courses")

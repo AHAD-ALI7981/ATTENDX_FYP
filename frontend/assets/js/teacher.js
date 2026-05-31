@@ -116,42 +116,10 @@ async function loadMyCourses() {
                             <div style="font-size: 0.82rem; color: var(--white-muted); margin-top: 2px;">${c.subject}</div>
                         </div>
                     </div>
-                    <i class="ri-arrow-down-s-line course-card-chevron"></i>
-                </div>
-                <div class="course-card-meta">
-                    <div class="course-meta-grid">
-                        <div class="course-meta-item">
-                            <i class="ri-hashtag" style="color: var(--accent);"></i>
-                            <div>
-                                <span class="meta-label">Course Code</span>
-                                <span class="meta-value">${c.course_code}</span>
-                            </div>
-                        </div>
-                        <div class="course-meta-item">
-                            <i class="ri-time-line" style="color: var(--purple);"></i>
-                            <div>
-                                <span class="meta-label">Credit Hours</span>
-                                <span class="meta-value">${c.credit_hours}</span>
-                            </div>
-                        </div>
-                        <div class="course-meta-item">
-                            <i class="ri-user-star-line" style="color: var(--success);"></i>
-                            <div>
-                                <span class="meta-label">Teacher</span>
-                                <span class="meta-value">${c.teacher_name}</span>
-                            </div>
-                        </div>
-                        <div class="course-meta-item">
-                            <i class="ri-group-line" style="color: #f59e0b;"></i>
-                            <div>
-                                <span class="meta-label">Enrolled Students</span>
-                                <span class="meta-value">${c.enrolled_count}</span>
-                            </div>
-                        </div>
-                    </div>
+                    <i class="ri-eye-line" style="color: var(--white-muted); font-size: 1.1rem;"></i>
                 </div>
             `;
-            card.addEventListener("click", () => selectCourse(c.id, card));
+            card.addEventListener("click", () => openCourseDetailModal(c));
             container.appendChild(card);
         });
     } catch (err) {
@@ -159,18 +127,64 @@ async function loadMyCourses() {
     }
 }
 
-function selectCourse(courseId, cardElement) {
-    selectedCourseId = courseId;
+function openCourseDetailModal(course) {
+    selectedCourseId = course.id;
 
-    // Collapse all other cards and deselect
-    document.querySelectorAll("#teacher-course-list .course-card").forEach((c) => {
-        if (c !== cardElement) {
-            c.classList.remove("expanded");
+    const modal = document.getElementById("course-detail-modal");
+    document.getElementById("course-modal-title").textContent = course.class_name;
+    document.getElementById("course-modal-subtitle").textContent = course.subject;
+
+    const table = document.getElementById("course-modal-table");
+    table.innerHTML = `
+        <tr>
+            <td><i class="ri-hashtag" style="color: var(--accent);"></i> Course Code</td>
+            <td>${course.course_code}</td>
+        </tr>
+        <tr>
+            <td><i class="ri-book-open-line" style="color: var(--purple);"></i> Subject</td>
+            <td>${course.course_description || course.subject}</td>
+        </tr>
+        <tr>
+            <td><i class="ri-time-line" style="color: var(--success);"></i> Credit Hours</td>
+            <td>${course.credit_hours}</td>
+        </tr>
+        <tr>
+            <td><i class="ri-user-star-line" style="color: #f59e0b;"></i> Teacher</td>
+            <td>${course.teacher_name}</td>
+        </tr>
+        <tr>
+            <td><i class="ri-group-line" style="color: var(--accent);"></i> Enrolled Students</td>
+            <td>${course.enrolled_count}</td>
+        </tr>
+    `;
+
+    modal.classList.add("active");
+
+    // Close handlers
+    const closeBtn = document.getElementById("course-modal-close");
+    const closeHandler = () => {
+        modal.classList.remove("active");
+        closeBtn.removeEventListener("click", closeHandler);
+    };
+    closeBtn.addEventListener("click", closeHandler);
+
+    // Click outside to close
+    const outsideHandler = (e) => {
+        if (e.target === modal) {
+            modal.classList.remove("active");
+            modal.removeEventListener("click", outsideHandler);
         }
-    });
+    };
+    modal.addEventListener("click", outsideHandler);
 
-    // Toggle the clicked card
-    cardElement.classList.toggle("expanded");
+    // Escape key to close
+    const escHandler = (e) => {
+        if (e.key === "Escape") {
+            modal.classList.remove("active");
+            document.removeEventListener("keydown", escHandler);
+        }
+    };
+    document.addEventListener("keydown", escHandler);
 
     loadEnrolledStudents();
 }

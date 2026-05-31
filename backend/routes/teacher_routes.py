@@ -1,7 +1,9 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from database import get_db
 from models import User, Course, Enrollment, Attendance, Class
@@ -16,6 +18,8 @@ from schemas import (
 from auth import require_role
 from face_utils import get_face_encoding, encoding_to_json, json_to_encoding, match_face
 
+limiter = Limiter(key_func=get_remote_address)
+
 router = APIRouter(prefix="/api/teacher", tags=["Teacher"])
 
 
@@ -25,6 +29,17 @@ def _get_teacher(db: Session, username: str) -> User:
     if not teacher:
         raise HTTPException(404, "Teacher not found")
     return teacher
+
+
+def _verify_course_ownership(db: Session, course_id: int, teacher: User) -> Course:
+    """Verify that the course belongs to this teacher. Raises 403 if not."""
+    course = db.query(Course).filter(
+        Course.id == course_id,
+        Course.teacher_id == teacher.id
+    ).first()
+    if not course:
+        raise HTTPException(403, "This course is not assigned to you")
+    return course
 
 
 # ---------- Courses ----------
@@ -42,9 +57,11 @@ def get_my_courses(
     for c in courses:
         credit_hours = 3
         course_code = c.subject
+        course_description = ""
         if c.course_def:
             credit_hours = c.course_def.credit_hours or 3
             course_code = c.course_def.course_id or c.subject
+            course_description = c.course_def.course_description or ""
 
         enrolled_count = db.query(Enrollment).filter(Enrollment.course_id == c.id).count()
 
@@ -53,6 +70,7 @@ def get_my_courses(
             "class_name": c.class_name,
             "subject": c.subject,
             "course_code": course_code,
+            "course_description": course_description,
             "credit_hours": credit_hours,
             "teacher_name": teacher_name,
             "enrolled_count": enrolled_count,
@@ -92,7 +110,9 @@ def get_student_users(
 
 # ---------- Enrollment with Face ----------
 @router.post("/enroll")
+@limiter.limit("10/minute")
 def enroll_student(
+    request: Request,
     req: EnrollRequest,
     db: Session = Depends(get_db),
     user: dict = Depends(require_role("teacher")),
@@ -103,9 +123,7 @@ def enroll_student(
     """
     # Verify course belongs to this teacher
     teacher = _get_teacher(db, user["sub"])
-    course = db.query(Course).filter(Course.id == req.course_id, Course.teacher_id == teacher.id).first()
-    if not course:
-        raise HTTPException(403, "This course is not assigned to you")
+    course = _verify_course_ownership(db, req.course_id, teacher)
 
     # Verify student exists in users table
     student_user = db.query(User).filter(User.id == req.student_user_id, User.role == "student").first()
@@ -125,12 +143,17 @@ def enroll_student(
     if encoding is None:
         raise HTTPException(400, "No face detected in the image. Please try again with a clear face photo.")
 
-    # Prevent face reuse by different students
-    all_enrollments = db.query(Enrollment).all()
+    # Prevent face reuse — only check within this teacher's courses to limit data exposure
+    teacher_course_ids = [c.id for c in db.query(Course).filter(Course.teacher_id == teacher.id).all()]
+    teacher_enrollments = db.query(Enrollment).filter(
+        Enrollment.course_id.in_(teacher_course_ids),
+        Enrollment.face_encoding.isnot(None),
+    ).all()
+
     known_encodings = []
     enrollment_refs = []
     
-    for e in all_enrollments:
+    for e in teacher_enrollments:
         if e.face_encoding:
             known_encodings.append(json_to_encoding(e.face_encoding))
             enrollment_refs.append(e)
@@ -161,7 +184,9 @@ def enroll_student(
 
 # ---------- Face Scan Attendance ----------
 @router.post("/scan-face", response_model=FaceScanResponse)
+@limiter.limit("10/minute")
 def scan_face_attendance(
+    request: Request,
     req: FaceScanRequest,
     db: Session = Depends(get_db),
     user: dict = Depends(require_role("teacher")),
@@ -172,16 +197,14 @@ def scan_face_attendance(
     If matched, marks as present for today.
     """
     teacher = _get_teacher(db, user["sub"])
-    course = db.query(Course).filter(Course.id == req.course_id, Course.teacher_id == teacher.id).first()
-    if not course:
-        raise HTTPException(403, "This course is not assigned to you")
+    course = _verify_course_ownership(db, req.course_id, teacher)
 
     # Get scanned face encoding
     scanned_encoding = get_face_encoding(req.face_image)
     if scanned_encoding is None:
         return FaceScanResponse(matched=False, message="No face detected in the image. Please try again.")
 
-    # Load all enrolled students with face data
+    # Load only enrolled students with face data for this specific course
     enrollments = db.query(Enrollment).filter(
         Enrollment.course_id == req.course_id,
         Enrollment.face_encoding.isnot(None),
@@ -242,9 +265,7 @@ def mark_manual_attendance(
 ):
     """Mark attendance manually for multiple students."""
     teacher = _get_teacher(db, user["sub"])
-    course = db.query(Course).filter(Course.id == req.course_id, Course.teacher_id == teacher.id).first()
-    if not course:
-        raise HTTPException(403, "This course is not assigned to you")
+    course = _verify_course_ownership(db, req.course_id, teacher)
 
     for record in req.records:
         enrollment = db.query(Enrollment).filter(
@@ -284,17 +305,20 @@ def get_enrolled_students(
     user: dict = Depends(require_role("teacher")),
 ):
     """Get all enrolled students in a course (for manual attendance form)."""
+    # Verify teacher owns this course
+    teacher = _get_teacher(db, user["sub"])
+    _verify_course_ownership(db, course_id, teacher)
+
     enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
 
     result = []
     for e in enrollments:
+        # Always resolve latest name from User FK when available
         student_name = e.student_name
-        if not student_name or student_name == e.student_id:
-            student_user = db.query(User).filter(User.id == e.user_id).first() if e.user_id else None
+        if e.user_id:
+            student_user = db.query(User).filter(User.id == e.user_id).first()
             if student_user:
                 student_name = student_user.full_name or student_user.username
-            else:
-                student_name = e.student_id
 
         result.append({"student_id": e.student_id, "student_name": student_name})
 
@@ -310,6 +334,10 @@ def get_daily_attendance(
     user: dict = Depends(require_role("teacher")),
 ):
     """Get the attendance sheet for a specific course and date."""
+    # Verify teacher owns this course
+    teacher = _get_teacher(db, user["sub"])
+    _verify_course_ownership(db, course_id, teacher)
+
     enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
     result = []
     for e in enrollments:
@@ -317,9 +345,17 @@ def get_daily_attendance(
             Attendance.enrollment_id == e.id,
             Attendance.date == date,
         ).first()
+
+        # Resolve latest student name from User FK
+        student_name = e.student_name
+        if e.user_id:
+            student_user = db.query(User).filter(User.id == e.user_id).first()
+            if student_user:
+                student_name = student_user.full_name or student_user.username
+
         result.append(DailyAttendanceItem(
             student_id=e.student_id,
-            student_name=e.student_name,
+            student_name=student_name,
             status=record.status if record else "absent",
         ))
     return result
@@ -333,6 +369,10 @@ def get_course_report(
     user: dict = Depends(require_role("teacher")),
 ):
     """Get detailed attendance report for all students in a course."""
+    # Verify teacher owns this course
+    teacher = _get_teacher(db, user["sub"])
+    _verify_course_ownership(db, course_id, teacher)
+
     enrollments = db.query(Enrollment).filter(Enrollment.course_id == course_id).all()
 
     # Total unique dates with any attendance record in this course
@@ -353,9 +393,16 @@ def get_course_report(
 
         percentage = (present_count / total_dates * 100) if total_dates > 0 else 0.0
 
+        # Resolve latest student name from User FK
+        student_name = e.student_name
+        if e.user_id:
+            student_user = db.query(User).filter(User.id == e.user_id).first()
+            if student_user:
+                student_name = student_user.full_name or student_user.username
+
         result.append(ReportItem(
             student_id=e.student_id,
-            student_name=e.student_name,
+            student_name=student_name,
             total_classes=total_dates,
             present=present_count,
             percentage=round(percentage, 1),
@@ -376,9 +423,7 @@ def get_full_course_report(
     student attendance stats, and shortage flags (below 75%).
     """
     teacher = _get_teacher(db, user["sub"])
-    course = db.query(Course).filter(Course.id == course_id, Course.teacher_id == teacher.id).first()
-    if not course:
-        raise HTTPException(403, "This course is not assigned to you")
+    course = _verify_course_ownership(db, course_id, teacher)
 
     # Get course metadata
     credit_hours = 3  # default
@@ -413,13 +458,12 @@ def get_full_course_report(
         if is_short:
             shortage_count += 1
 
+        # Resolve latest student name from User FK
         student_name = e.student_name
-        if not student_name or student_name == e.student_id:
-            student_user = db.query(User).filter(User.id == e.user_id).first() if e.user_id else None
+        if e.user_id:
+            student_user = db.query(User).filter(User.id == e.user_id).first()
             if student_user:
                 student_name = student_user.full_name or student_user.username
-            else:
-                student_name = e.student_id
 
         students.append({
             "student_id": e.student_id,

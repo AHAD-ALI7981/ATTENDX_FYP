@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Dashboard</title>
+    <title>AttendX — Student Dashboard</title>
+    <meta name="description" content="AttendX Student Dashboard — View courses and attendance records">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/dashboard.css">
 </head>
@@ -15,7 +16,11 @@
         <!-- Sidebar -->
         <aside class="sidebar" style="border-top-left-radius: 0;">
             <div class="sidebar-header" style="margin-top: 10px;">
-                <h2>Student Panel</h2>
+                <div class="sidebar-logo">
+                    <i class="ri-graduation-cap-fill"></i>
+                </div>
+                <h2>AttendX</h2>
+                <span class="sidebar-role-badge">Student</span>
             </div>
             <nav class="sidebar-nav">
                 <button class="nav-item active" data-target="my-courses-tab">
@@ -92,8 +97,29 @@
             </div>
         </main>
     </div>
+
+    <!-- Course Detail Modal -->
+    <div id="course-detail-modal" class="course-detail-modal-overlay">
+        <div class="course-detail-modal">
+            <div class="course-detail-modal-header">
+                <div class="modal-title-block">
+                    <h3 id="course-modal-title">Course Name</h3>
+                    <p id="course-modal-subtitle">Subject</p>
+                </div>
+                <button class="course-detail-modal-close" id="course-modal-close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <div class="course-detail-modal-body">
+                <table class="course-detail-table" id="course-modal-table">
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
+    <script src="assets/js/toast.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/student.js"></script>
 </body>

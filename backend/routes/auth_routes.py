@@ -8,7 +8,8 @@ from models import User
 from schemas import LoginRequest, ForgotPasswordRequest, ResetPasswordRequest, UpdatePasswordRequest
 from auth import (
     verify_password, create_access_token, get_current_user, EXPIRE_HOURS,
-    hash_password, create_password_reset_token, verify_password_reset_token
+    hash_password, create_password_reset_token, verify_password_reset_token,
+    validate_password_strength, IS_PRODUCTION
 )
 from email_utils import send_reset_email
 
@@ -30,9 +31,9 @@ def login(request: Request, req: LoginRequest, response: Response, db: Session =
     response.set_cookie(
         key="access_token",
         value=token,
-        httponly=True,  # JS cannot access this cookie (prevents XSS)
-        samesite="lax", # CSRF protection
-        secure=False,   # Set to True in production over HTTPS
+        httponly=True,       # JS cannot access this cookie (prevents XSS)
+        samesite="lax",      # CSRF protection
+        secure=IS_PRODUCTION,  # True in production (requires HTTPS)
         max_age=EXPIRE_HOURS * 3600
     )
     
@@ -50,7 +51,7 @@ def get_me(user: dict = Depends(get_current_user)):
     return {"username": user.get("sub"), "role": user.get("role")}
 
 @router.post("/forgot-password")
-@limiter.limit("5/minute")
+@limiter.limit("3/minute")
 def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     """Generates a reset token and sends an email to the user."""
     user = db.query(User).filter(User.email == req.email).first()
@@ -58,7 +59,7 @@ def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = 
     # We always return the same message to prevent email enumeration
     msg = "If your email is registered, you will receive a password reset link shortly."
     
-    if user:
+    if user and user.role == "admin":
         token = create_password_reset_token(user.email)
         # Construct the reset link based on the request's origin/host
         base_url = str(request.base_url).rstrip("/")
@@ -71,6 +72,9 @@ def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = 
 @limiter.limit("3/minute")
 def reset_password(request: Request, req: ResetPasswordRequest, db: Session = Depends(get_db)):
     """Validates the reset token and updates the user's password."""
+    # Validate password strength before processing the token
+    validate_password_strength(req.new_password)
+
     email = verify_password_reset_token(req.token)
     
     user = db.query(User).filter(User.email == email).first()
@@ -92,8 +96,8 @@ def update_password(req: UpdatePasswordRequest, db: Session = Depends(get_db), u
     if not verify_password(req.current_password, db_user.password_hash):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
-    if len(req.new_password) < 4:
-        raise HTTPException(status_code=400, detail="New password must be at least 4 characters")
+    # Enforce strong password rules
+    validate_password_strength(req.new_password)
 
     db_user.password_hash = hash_password(req.new_password)
     db.commit()

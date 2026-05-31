@@ -13,10 +13,6 @@ from sqlalchemy import text
 from database import engine, Base, SessionLocal
 from models import User
 from auth import hash_password
-from routes.auth_routes import router as auth_router
-from routes.admin_routes import router as admin_router
-from routes.teacher_routes import router as teacher_router
-from routes.student_routes import router as student_router
 
 # Create all database tables
 Base.metadata.create_all(bind=engine)
@@ -55,12 +51,17 @@ with SessionLocal() as db:
     except Exception:
         db.rollback()
 
-    # Seed default admin account
+    # Seed default admin account — password is read from environment
     if not db.query(User).filter(User.username == "admin").first():
-        db.add(User(username="admin", email="admin@example.com", password_hash=hash_password("admin123"), role="admin"))
-        db.add(User(username="teacher", password_hash=hash_password("teacher123"), role="teacher"))
+        default_admin_pw = os.getenv("DEFAULT_ADMIN_PASSWORD", "Admin@1234")
+        db.add(User(
+            username="admin",
+            email="admin@example.com",
+            password_hash=hash_password(default_admin_pw),
+            role="admin",
+        ))
         db.commit()
-        print("Created default admin and teacher accounts.")
+        print(f"Created default admin account. (Change the password immediately!)")
 
 # ---------- Rate Limiter ----------
 limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
@@ -80,23 +81,41 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Too many requests. Please slow down and try again shortly."},
     )
 
-# CORS — allow frontend to call the API
+# CORS — restrict to known origins
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+if ENVIRONMENT.lower() == "production":
+    allowed_origins = [
+        os.getenv("FRONTEND_ORIGIN", "https://yourdomain.com"),
+    ]
+else:
+    allowed_origins = [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3000",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict to your domain
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Register API routes
+from routes.auth_routes import router as auth_router
+from routes.admin_routes import router as admin_router
+from routes.teacher_routes import router as teacher_router
+from routes.student_routes import router as student_router
+
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(teacher_router)
 app.include_router(student_router)
 
 # Serve frontend static files (HTML, CSS, JS, images)
-FRONTEND_DIR = Path(__file__).resolve().parent.parent
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
 app.mount("/assets", StaticFiles(directory=str(FRONTEND_DIR / "assets")), name="assets")
 
 @app.get("/")

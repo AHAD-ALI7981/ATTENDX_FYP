@@ -171,8 +171,20 @@ document.addEventListener("DOMContentLoaded", () => {
             errorMsg.textContent = "Please fill in all fields.";
             return;
         }
-        if (newPwd.length < 4) {
-            errorMsg.textContent = "New password must be at least 4 characters.";
+        if (newPwd.length < 8) {
+            errorMsg.textContent = "Password must be at least 8 characters.";
+            return;
+        }
+        if (!/[A-Z]/.test(newPwd)) {
+            errorMsg.textContent = "Password must contain at least one uppercase letter.";
+            return;
+        }
+        if (!/[a-z]/.test(newPwd)) {
+            errorMsg.textContent = "Password must contain at least one lowercase letter.";
+            return;
+        }
+        if (!/[0-9]/.test(newPwd)) {
+            errorMsg.textContent = "Password must contain at least one digit.";
             return;
         }
         if (newPwd !== confirmPwd) {

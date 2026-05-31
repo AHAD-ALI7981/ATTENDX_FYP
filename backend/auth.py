@@ -1,4 +1,5 @@
 import bcrypt
+import re
 from datetime import datetime, timedelta, timezone
 from fastapi import Request, HTTPException, status, Depends
 from jose import JWTError, jwt
@@ -7,9 +8,41 @@ import os
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("JWT_SECRET", "fallback-secret-key")
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY or SECRET_KEY == "CHANGE-ME-TO-A-STRONG-RANDOM-SECRET":
+    raise RuntimeError(
+        "JWT_SECRET environment variable is not set or is still the default placeholder. "
+        "Please set a strong random secret in your .env file."
+    )
+
 ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 EXPIRE_HOURS = int(os.getenv("JWT_EXPIRE_HOURS", "24"))
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+IS_PRODUCTION = ENVIRONMENT.lower() == "production"
+
+# ---- Password Strength ----
+MIN_PASSWORD_LENGTH = 8
+
+def validate_password_strength(password: str) -> None:
+    """
+    Enforce strong password requirements.
+    Raises HTTPException if password is too weak.
+    """
+    errors = []
+    if len(password) < MIN_PASSWORD_LENGTH:
+        errors.append(f"at least {MIN_PASSWORD_LENGTH} characters")
+    if not re.search(r"[A-Z]", password):
+        errors.append("at least one uppercase letter")
+    if not re.search(r"[a-z]", password):
+        errors.append("at least one lowercase letter")
+    if not re.search(r"[0-9]", password):
+        errors.append("at least one digit")
+
+    if errors:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Password must contain: {', '.join(errors)}."
+        )
 
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()

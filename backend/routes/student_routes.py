@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Course, Enrollment, Attendance
+from models import User, Course, Enrollment, Attendance
 from schemas import StudentAttendanceResponse
 from auth import require_role
 
@@ -31,11 +31,13 @@ def get_enrolled_courses(
     result = []
     for c in courses:
         course_code = c.course_def.course_id if c.course_def else c.subject
+        course_description = c.course_def.course_description if c.course_def and c.course_def.course_description else ""
         result.append({
             "id": c.id,
             "class_name": c.class_name,
             "subject": c.subject,
             "course_code": course_code,
+            "course_description": course_description,
             "teacher_name": (c.teacher.full_name or c.teacher.username) if c.teacher else "Unknown",
             "credit_hours": c.course_def.credit_hours if c.course_def else 3,
         })
@@ -93,9 +95,16 @@ def check_attendance(
 
     absent_count = total_classes - present_count
 
+    # Resolve latest student name from User FK
+    student_name = enrollment.student_name
+    if enrollment.user_id:
+        student_user = db.query(User).filter(User.id == enrollment.user_id).first()
+        if student_user:
+            student_name = student_user.full_name or student_user.username
+
     return StudentAttendanceResponse(
         student_id=enrollment.student_id,
-        student_name=enrollment.student_name,
+        student_name=student_name,
         class_name=enrollment.course.class_name,
         subject=enrollment.course.subject,
         teacher_name=(enrollment.course.teacher.full_name or enrollment.course.teacher.username) if enrollment.course.teacher else "Unknown",

@@ -73,12 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnGenEditPwd = document.getElementById("btn-generate-edit-password");
     if(btnGenEditPwd) {
         btnGenEditPwd.addEventListener("click", () => {
-            const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            let password = "";
-            for (let i = 0; i < 8; i++) {
-                password += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            document.getElementById("edit-user-password").value = password;
+            document.getElementById("edit-user-password").value = generateStrongPassword();
         });
     }
 
@@ -90,14 +85,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("btn-create-course-def").addEventListener("click", createCourseDef);
 });
 
-function generateRandomPassword(role) {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function generateStrongPassword() {
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const digits = "0123456789";
+    const all = upper + lower + digits;
+    // Guarantee at least one of each required type
     let password = "";
-    for (let i = 0; i < 8; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    password += upper.charAt(Math.floor(Math.random() * upper.length));
+    password += lower.charAt(Math.floor(Math.random() * lower.length));
+    password += digits.charAt(Math.floor(Math.random() * digits.length));
+    for (let i = 3; i < 10; i++) {
+        password += all.charAt(Math.floor(Math.random() * all.length));
     }
+    // Shuffle the password so required chars aren't always at the start
+    password = password.split('').sort(() => Math.random() - 0.5).join('');
+    return password;
+}
+
+function generateRandomPassword(role) {
     const pwdInput = document.getElementById(`admin-${role}-password`);
-    if (pwdInput) pwdInput.value = password;
+    if (pwdInput) pwdInput.value = generateStrongPassword();
 }
 
 async function createUser(role) {

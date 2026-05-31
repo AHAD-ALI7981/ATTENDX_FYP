@@ -10,7 +10,7 @@ from schemas import (
     UserUpdateRequest, PaginatedUserResponse,
     ClassCreate, ClassResponse, CourseDefCreate, CourseDefResponse
 )
-from auth import require_role, hash_password
+from auth import require_role, hash_password, validate_password_strength
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
@@ -114,6 +114,9 @@ def create_user(
     if not re.match(r"^[a-zA-Z0-9_-]+$", req.username):
         raise HTTPException(400, "Username can only contain letters, numbers, dashes, and underscores (no spaces).")
 
+    # Enforce strong password rules
+    validate_password_strength(req.password)
+
     existing = db.query(User).filter(User.username == req.username).first()
     if existing:
         raise HTTPException(409, "Username already exists")
@@ -202,6 +205,7 @@ def update_user(
         target_user.class_id = req.class_id if target_user.role == "student" else None
 
     if req.password is not None:
+        validate_password_strength(req.password)
         target_user.password_hash = hash_password(req.password)
         
     db.commit()
@@ -273,10 +277,14 @@ def delete_class(
     db: Session = Depends(get_db),
     admin_user: dict = Depends(require_role("admin")),
 ):
-    """Delete a class."""
+    """Delete a class and all its course allotments."""
     cls = db.query(Class).filter(Class.id == class_id).first()
     if not cls:
         raise HTTPException(404, "Class not found")
+    # Delete all course allotments linked to this class (cascades to enrollments & attendance)
+    related_courses = db.query(Course).filter(Course.class_ref_id == cls.id).all()
+    for course in related_courses:
+        db.delete(course)
     db.delete(cls)
     db.commit()
     return {"message": "Class deleted successfully"}
@@ -318,10 +326,14 @@ def delete_course_def(
     db: Session = Depends(get_db),
     admin_user: dict = Depends(require_role("admin")),
 ):
-    """Delete a course definition."""
+    """Delete a course definition and all its course allotments."""
     cd = db.query(CourseDefinition).filter(CourseDefinition.id == course_def_id).first()
     if not cd:
         raise HTTPException(404, "Course definition not found")
+    # Delete all course allotments linked to this definition (cascades to enrollments & attendance)
+    related_courses = db.query(Course).filter(Course.course_def_id == cd.id).all()
+    for course in related_courses:
+        db.delete(course)
     db.delete(cd)
     db.commit()
     return {"message": "Course definition deleted successfully"}

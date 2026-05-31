@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000/api';
+const API_URL = `${window.location.origin}/api`;
 
 // Handle Forgot Password Form
 const forgotForm = document.getElementById('forgot-password-form');
@@ -102,6 +102,35 @@ if (resetForm) {
             messageDiv.style.border = '1px solid #F44336';
             messageDiv.style.color = '#fff';
             messageDiv.textContent = 'Invalid or missing token. Please request a new link.';
+            return;
+        }
+
+        if (newPassword.length < 8) {
+            messageDiv.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+            messageDiv.style.border = '1px solid #F44336';
+            messageDiv.style.color = '#fff';
+            messageDiv.textContent = 'Password must be at least 8 characters.';
+            return;
+        }
+        if (!/[A-Z]/.test(newPassword)) {
+            messageDiv.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+            messageDiv.style.border = '1px solid #F44336';
+            messageDiv.style.color = '#fff';
+            messageDiv.textContent = 'Password must contain at least one uppercase letter.';
+            return;
+        }
+        if (!/[a-z]/.test(newPassword)) {
+            messageDiv.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+            messageDiv.style.border = '1px solid #F44336';
+            messageDiv.style.color = '#fff';
+            messageDiv.textContent = 'Password must contain at least one lowercase letter.';
+            return;
+        }
+        if (!/[0-9]/.test(newPassword)) {
+            messageDiv.style.backgroundColor = 'rgba(244, 67, 54, 0.2)';
+            messageDiv.style.border = '1px solid #F44336';
+            messageDiv.style.color = '#fff';
+            messageDiv.textContent = 'Password must contain at least one digit.';
             return;
         }
 
