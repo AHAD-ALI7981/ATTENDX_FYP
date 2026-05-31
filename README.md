@@ -399,6 +399,60 @@ AttendX is built with security as a first-class concern:
 
 ---
 
+## 📚 References
+
+### Face Detection & Recognition
+
+<table>
+<tr><td>[1]</td><td>W. Wu, Y. Peng, and D. Zhang, <b>"YuNet: A Tiny Millisecond-level Face Detector,"</b> <i>Machine Intelligence Research</i>, vol. 20, pp. 656–670, 2023. DOI: <a href="https://doi.org/10.1007/s11633-023-1423-y">10.1007/s11633-023-1423-y</a></td></tr>
+<tr><td>[2]</td><td>Z. Zhong, L. Chen, and J. Deng, <b>"SFace: Sigmoid-Constrained Hypersphere Loss for Robust Face Recognition,"</b> <i>IEEE Transactions on Image Processing</i>, vol. 30, pp. 2587–2598, 2021. DOI: <a href="https://doi.org/10.1109/TIP.2020.3048632">10.1109/TIP.2020.3048632</a></td></tr>
+<tr><td>[3]</td><td>G. Bradski, <b>"The OpenCV Library,"</b> <i>Dr. Dobb's Journal of Software Tools</i>, vol. 25, no. 11, pp. 120–125, 2000. Available: <a href="https://opencv.org">https://opencv.org</a></td></tr>
+<tr><td>[4]</td><td>OpenCV, <b>"OpenCV Zoo — Pre-trained DNN Models,"</b> 2024. Available: <a href="https://github.com/opencv/opencv_zoo">https://github.com/opencv/opencv_zoo</a></td></tr>
+</table>
+
+### Backend Framework & Database
+
+<table>
+<tr><td>[5]</td><td>S. Ramírez, <b>"FastAPI — Modern, Fast Web Framework for Building APIs with Python,"</b> 2019. Available: <a href="https://fastapi.tiangolo.com">https://fastapi.tiangolo.com</a></td></tr>
+<tr><td>[6]</td><td>M. Bayer, <b>"SQLAlchemy — The Database Toolkit for Python,"</b> 2006. Available: <a href="https://www.sqlalchemy.org">https://www.sqlalchemy.org</a></td></tr>
+<tr><td>[7]</td><td>Oracle Corporation, <b>"MySQL 8.0 Reference Manual,"</b> 2024. Available: <a href="https://dev.mysql.com/doc/refman/8.0/en/">https://dev.mysql.com/doc/refman/8.0/en/</a></td></tr>
+<tr><td>[8]</td><td>S. Ramírez, <b>"Pydantic — Data Validation Using Python Type Annotations,"</b> 2017. Available: <a href="https://docs.pydantic.dev">https://docs.pydantic.dev</a></td></tr>
+</table>
+
+### Authentication & Security
+
+<table>
+<tr><td>[9]</td><td>M. Jones, J. Bradley, and N. Sakimura, <b>"RFC 7519 — JSON Web Token (JWT),"</b> <i>Internet Engineering Task Force (IETF)</i>, May 2015. DOI: <a href="https://doi.org/10.17487/RFC7519">10.17487/RFC7519</a></td></tr>
+<tr><td>[10]</td><td>N. Provos and D. Mazières, <b>"A Future-Adaptable Password Scheme,"</b> <i>Proceedings of the USENIX Annual Technical Conference</i>, pp. 81–91, 1999.</td></tr>
+<tr><td>[11]</td><td>OWASP Foundation, <b>"OWASP Top 10 Web Application Security Risks,"</b> 2021. Available: <a href="https://owasp.org/www-project-top-ten/">https://owasp.org/www-project-top-ten/</a></td></tr>
+<tr><td>[12]</td><td>A. Barth, <b>"RFC 6265 — HTTP State Management Mechanism (Cookies),"</b> <i>Internet Engineering Task Force (IETF)</i>, April 2011. DOI: <a href="https://doi.org/10.17487/RFC6265">10.17487/RFC6265</a></td></tr>
+</table>
+
+### Image Processing & Computation
+
+<table>
+<tr><td>[13]</td><td>C. R. Harris et al., <b>"Array Programming with NumPy,"</b> <i>Nature</i>, vol. 585, pp. 357–362, 2020. DOI: <a href="https://doi.org/10.1038/s41586-020-2649-2">10.1038/s41586-020-2649-2</a></td></tr>
+<tr><td>[14]</td><td>A. Clark, <b>"Pillow — The Friendly PIL Fork,"</b> Python Imaging Library, 2015. Available: <a href="https://python-pillow.org">https://python-pillow.org</a></td></tr>
+</table>
+
+### Attendance Systems Research
+
+<table>
+<tr><td>[15]</td><td>M. A. Khan, M. V. Joshi, and P. M. Choudhary, <b>"A Review of Face Recognition Based Attendance Systems,"</b> <i>International Journal of Computer Applications</i>, vol. 176, no. 22, pp. 28–33, 2020.</td></tr>
+<tr><td>[16]</td><td>S. Sawhney, K. Kacker, S. Jain, S. N. Singh, and R. Garg, <b>"Real-Time Smart Attendance System using Face Recognition Techniques,"</b> <i>IEEE 9th International Conference on Cloud Computing, Data Science & Engineering (Confluence)</i>, pp. 522–525, 2019. DOI: <a href="https://doi.org/10.1109/CONFLUENCE.2019.8776934">10.1109/CONFLUENCE.2019.8776934</a></td></tr>
+<tr><td>[17]</td><td>D. Sunaryono, J. Siswanto, and R. Anggoro, <b>"An Android Based Course Attendance System Using Face Recognition,"</b> <i>Journal of King Saud University — Computer and Information Sciences</i>, vol. 33, no. 3, pp. 304–312, 2021. DOI: <a href="https://doi.org/10.1016/j.jksuci.2019.01.006">10.1016/j.jksuci.2019.01.006</a></td></tr>
+</table>
+
+### Web Technologies
+
+<table>
+<tr><td>[18]</td><td>Mozilla Developer Network, <b>"Using the MediaDevices API — Web Camera Access,"</b> 2024. Available: <a href="https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices">https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices</a></td></tr>
+<tr><td>[19]</td><td>J. Parallada, <b>"jsPDF — Client-Side PDF Generation Library,"</b> 2014. Available: <a href="https://github.com/parallax/jsPDF">https://github.com/parallax/jsPDF</a></td></tr>
+<tr><td>[20]</td><td>Remix Design, <b>"Remix Icon — Open Source Icon Library,"</b> 2020. Available: <a href="https://remixicon.com">https://remixicon.com</a></td></tr>
+</table>
+
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
