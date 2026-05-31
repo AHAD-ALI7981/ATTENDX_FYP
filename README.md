@@ -278,12 +278,12 @@ All API endpoints are prefixed accordingly and documented via FastAPI's auto-gen
 
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
-| `POST` | `/login` | Login & set HttpOnly cookie | ❌ |
-| `POST` | `/logout` | Clear auth cookie | ❌ |
-| `GET` | `/me` | Get current user info | ✅ |
-| `POST` | `/forgot-password` | Request password reset email | ❌ |
-| `POST` | `/reset-password` | Reset password with token | ❌ |
-| `POST` | `/update-password` | Change own password | ✅ |
+| `POST` | `/login` | Login & set HttpOnly cookie | Public |
+| `POST` | `/logout` | Clear auth cookie | Public |
+| `GET` | `/me` | Get current user info | 🔒 Protected |
+| `POST` | `/forgot-password` | Request password reset email | Public |
+| `POST` | `/reset-password` | Reset password with token | Public |
+| `POST` | `/update-password` | Change own password | 🔒 Protected |
 
 ### Admin (`/api/admin`) — Requires `admin` role
 
