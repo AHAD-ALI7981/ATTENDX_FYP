@@ -1,17 +1,17 @@
 /*=============== GOOGLE FONTS ===============*/
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
 
 /*=============== VARIABLES CSS ===============*/
 :root {
   /*========== Colors ==========*/
   --white-color: hsl(0, 0%, 100%);
   --black-color: hsl(0, 0%, 0%);
-  --primary: #4f8df5;
-  --primary-dark: #3b6fcc;
-  --purple: #818cf8;
-  --purple-deep: #a78bfa;
+  --primary: #ff6b6b;
+  --primary-dark: #ee5a24;
+  --amber: #f0932b;
+  --gold: #f6e58d;
   /*========== Font and typography ==========*/
-  --body-font: "Poppins", sans-serif;
+  --body-font: "Outfit", sans-serif;
   --h1-font-size: 1.75rem;
   --normal-font-size: 1rem;
   --small-font-size: .813rem;
@@ -55,35 +55,43 @@ img {
 }
 
 /*=============== ANIMATIONS ===============*/
-@keyframes fadeSlideUp {
+@keyframes rotateSlideIn {
   from {
     opacity: 0;
-    transform: translateY(35px);
+    transform: translateY(40px) rotate(-3deg) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) rotate(0deg) scale(1);
   }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes morphBlur {
+  from {
+    opacity: 0;
+    filter: blur(12px);
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
 }
 
-@keyframes shimmer {
+@keyframes heatWave {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
-@keyframes floatSoft {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
 }
 
-@keyframes glowPulse {
-  0%, 100% { box-shadow: 0 6px 25px rgba(79, 141, 245, 0.3); }
-  50% { box-shadow: 0 8px 40px rgba(79, 141, 245, 0.55); }
+@keyframes emberPulse {
+  0%, 100% { box-shadow: 0 6px 25px rgba(255, 107, 107, 0.3); }
+  50% { box-shadow: 0 8px 40px rgba(240, 147, 43, 0.55); }
 }
 
 /*=============== LOGIN ===============*/
@@ -101,20 +109,20 @@ img {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  animation: fadeIn 1s ease-out;
+  animation: morphBlur 1.2s ease-out;
 }
 
 .login__form {
   position: relative;
-  background-color: hsla(0, 0%, 10%, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  background-color: hsla(15, 30%, 8%, 0.25);
+  border: 1px solid rgba(255, 180, 120, 0.2);
   margin-inline: 1.5rem;
   padding: 2.5rem 1.5rem;
   border-radius: 1.25rem;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  animation: fadeSlideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 200, 150, 0.1);
+  animation: rotateSlideIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
 }
 
 /* ===== BRAND LOGO ===== */
@@ -124,21 +132,21 @@ img {
   justify-content: center;
   gap: 10px;
   margin-bottom: 0.5rem;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s backwards;
+  animation: rotateSlideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s backwards;
 }
 
 .login__brand-icon {
-  width: 44px;
-  height: 44px;
-  background: linear-gradient(135deg, var(--primary), var(--purple-deep));
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(160deg, var(--primary), var(--amber));
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   color: white;
-  box-shadow: 0 4px 14px rgba(79, 141, 245, 0.35);
-  animation: floatSoft 3s ease-in-out infinite;
+  box-shadow: 0 4px 18px rgba(255, 107, 107, 0.35);
+  animation: breathe 3.5s ease-in-out infinite;
 }
 
 .login__title {
@@ -146,18 +154,22 @@ img {
   font-size: var(--h1-font-size);
   font-weight: var(--font-bold);
   margin-bottom: 0.2rem;
-  letter-spacing: 0.5px;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s backwards;
+  letter-spacing: 1.5px;
+  background: linear-gradient(160deg, var(--white-color), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: rotateSlideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.35s backwards;
 }
 
 .login__subtitle {
   text-align: center;
   font-size: var(--small-font-size);
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 220, 180, 0.65);
   margin-bottom: 2rem;
   font-weight: var(--font-medium);
   letter-spacing: 0.5px;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.45s backwards;
+  animation: rotateSlideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.45s backwards;
 }
 
 .login__content,
@@ -168,14 +180,14 @@ img {
 .login__content {
   row-gap: 1.75rem;
   margin-bottom: 1.5rem;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s backwards;
+  animation: rotateSlideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.5s backwards;
 }
 
 .login__box {
   grid-template-columns: max-content 1fr;
   align-items: center;
   column-gap: 0.75rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.35);
+  border-bottom: 2px solid rgba(255, 180, 120, 0.3);
   transition: border-color 0.3s ease;
 }
 
@@ -229,20 +241,20 @@ img {
 
 .login__eye:hover {
   color: var(--primary);
-  transform: scale(1.1);
+  transform: scale(1.15) rotate(5deg);
 }
 
 .login__forgot {
   display: inline-block;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 220, 180, 0.8);
   margin-bottom: 2rem;
   font-size: var(--small-font-size);
   transition: color 0.3s ease;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.55s backwards;
+  animation: rotateSlideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.55s backwards;
 }
 
 .login__forgot:hover {
-  color: var(--primary);
+  color: var(--amber);
   text-decoration: underline;
 }
 
@@ -251,29 +263,29 @@ img {
   width: 100%;
   padding: 1rem;
   border-radius: 0.75rem;
-  background: linear-gradient(135deg, var(--primary), var(--purple), var(--purple-deep));
+  background: linear-gradient(160deg, var(--primary), var(--amber), var(--gold));
   background-size: 200% auto;
-  color: var(--white-color);
-  font-weight: var(--font-semibold);
+  color: var(--black-color);
+  font-weight: var(--font-bold);
   font-size: 1rem;
-  letter-spacing: 0.8px;
+  letter-spacing: 1.2px;
   cursor: pointer;
   margin-bottom: 2rem;
   position: relative;
   overflow: hidden;
   transition: all 0.35s ease;
-  box-shadow: 0 6px 25px rgba(79, 141, 245, 0.3);
+  box-shadow: 0 6px 25px rgba(255, 107, 107, 0.3);
   text-transform: uppercase;
-  animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.6s backwards;
+  animation: rotateSlideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.6s backwards;
 }
 
 .login__button:hover {
-  animation: shimmer 2s linear infinite, glowPulse 2s ease-in-out infinite;
-  transform: translateY(-2px);
+  animation: heatWave 2s linear infinite, emberPulse 2s ease-in-out infinite;
+  transform: translateY(-3px);
 }
 
 .login__button:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0) scale(0.97);
   transition: transform 0.1s ease;
 }
 

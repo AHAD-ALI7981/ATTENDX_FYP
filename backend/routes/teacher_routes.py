@@ -143,17 +143,16 @@ def enroll_student(
     if encoding is None:
         raise HTTPException(400, "No face detected in the image. Please try again with a clear face photo.")
 
-    # Prevent face reuse — only check within this teacher's courses to limit data exposure
-    teacher_course_ids = [c.id for c in db.query(Course).filter(Course.teacher_id == teacher.id).all()]
-    teacher_enrollments = db.query(Enrollment).filter(
-        Enrollment.course_id.in_(teacher_course_ids),
+    # Prevent face reuse — check ALL enrollments system-wide to ensure
+    # one face can only be used for one student across the entire system.
+    all_face_enrollments = db.query(Enrollment).filter(
         Enrollment.face_encoding.isnot(None),
     ).all()
 
     known_encodings = []
     enrollment_refs = []
     
-    for e in teacher_enrollments:
+    for e in all_face_enrollments:
         if e.face_encoding:
             known_encodings.append(json_to_encoding(e.face_encoding))
             enrollment_refs.append(e)
