@@ -310,6 +310,10 @@ function setupButtons() {
         }
     });
 
+    // Stop camera button
+    const stopCameraBtn = document.getElementById("btn-stop-camera");
+    if (stopCameraBtn) stopCameraBtn.addEventListener("click", stopCameraAndSave);
+
     // Report buttons
     const generateBtn = document.getElementById("btn-generate-report");
     if (generateBtn) generateBtn.addEventListener("click", generateFullReport);
@@ -375,6 +379,8 @@ async function enrollStudent() {
 
 
 // ==================== FACE SCAN ATTENDANCE ====================
+let scanSessionCount = 0;
+
 async function scanFace() {
     if (!selectedCourseId) {
         alert("Please select a course first from My Courses.");
@@ -382,11 +388,21 @@ async function scanFace() {
     }
     const video = document.getElementById("camera-stream");
     const resultText = document.getElementById("scan-result");
+    const stopBtn = document.getElementById("btn-stop-camera");
+    const sessionInfo = document.getElementById("scan-session-info");
 
     if (!attendanceStream) {
         try {
             attendanceStream = await navigator.mediaDevices.getUserMedia({ video: true });
             video.srcObject = attendanceStream;
+            // Show the stop camera button and session info
+            if (stopBtn) stopBtn.classList.remove("hidden");
+            scanSessionCount = 0;
+            if (sessionInfo) {
+                sessionInfo.classList.remove("hidden");
+                sessionInfo.style.display = "flex";
+                document.getElementById("scan-count").textContent = "0";
+            }
         } catch (err) {
             alert("Unable to access camera.");
             return;
@@ -420,6 +436,14 @@ async function scanFace() {
         if (data.matched) {
             resultText.textContent = data.message;
             resultText.style.color = "#34d399";
+
+            // Increment counter only for new attendance (not already marked)
+            if (!data.message.includes("already marked")) {
+                scanSessionCount++;
+                const countEl = document.getElementById("scan-count");
+                if (countEl) countEl.textContent = scanSessionCount;
+            }
+
             if (overlay && overlayText) {
                 overlayText.textContent = "✅ " + data.message;
                 overlayText.style.color = "#34d399";
@@ -443,6 +467,44 @@ async function scanFace() {
         resultText.textContent = "❌ Server error during scan.";
         resultText.style.color = "#f87171";
     }
+}
+
+function stopCameraAndSave() {
+    // Stop camera stream
+    if (attendanceStream) {
+        attendanceStream.getTracks().forEach(track => track.stop());
+        attendanceStream = null;
+    }
+
+    // Clear video element
+    const video = document.getElementById("camera-stream");
+    if (video) video.srcObject = null;
+
+    // Hide the stop button
+    const stopBtn = document.getElementById("btn-stop-camera");
+    if (stopBtn) stopBtn.classList.add("hidden");
+
+    // Show summary message
+    const resultText = document.getElementById("scan-result");
+    if (resultText) {
+        if (scanSessionCount > 0) {
+            resultText.textContent = `✅ Attendance saved! ${scanSessionCount} student(s) marked present.`;
+            resultText.style.color = "#34d399";
+        } else {
+            resultText.textContent = "📷 Camera stopped. No students were scanned.";
+            resultText.style.color = "#60a5fa";
+        }
+    }
+
+    // Update session info to show final count
+    const sessionInfo = document.getElementById("scan-session-info");
+    if (sessionInfo && scanSessionCount > 0) {
+        sessionInfo.style.background = "rgba(46,204,113,0.15)";
+        sessionInfo.style.borderColor = "rgba(46,204,113,0.35)";
+    }
+
+    // Reset counter for next session
+    scanSessionCount = 0;
 }
 
 

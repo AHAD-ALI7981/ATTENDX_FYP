@@ -1004,50 +1004,116 @@ hr {
     grid-template-columns: 1fr;
   }
 
+  /* Disable hover transforms on touch devices */
+  .card:hover {
+    transform: none;
+    rotate: none;
+  }
+
+  .sidebar-logo {
+    animation: none;
+  }
+
   .dashboard-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     text-align: center;
-    padding: 18px 20px;
+    padding: 15px 16px;
   }
 
   .dashboard-header h2 {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
 
-  #app-dashboard,
-  .dashboard-layout {
-    padding: 15px 12px;
+  #app-dashboard {
+    padding: 12px 8px;
   }
 
   .dashboard-layout {
     flex-direction: column;
+    padding: 0;
   }
 
   .sidebar {
     width: 100%;
     height: auto;
     position: static;
-    margin-bottom: 20px;
+    margin-bottom: 0;
+    padding: 15px 12px;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+    border-radius: 0 !important;
+  }
+
+  .sidebar-header {
+    margin-bottom: 15px;
+  }
+
+  .sidebar-header h2 {
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo {
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
   }
 
   .sidebar-nav {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
+    gap: 6px;
   }
 
   .nav-item {
-    font-size: 0.9rem;
-    padding: 8px 12px;
+    font-size: 0.78rem;
+    padding: 7px 10px;
+    gap: 5px;
+    border-radius: var(--radius-sm);
+  }
+
+  .nav-item i {
+    font-size: 0.95rem;
+  }
+
+  .nav-item::before {
+    display: none;
+  }
+
+  .nav-item:hover {
+    padding-left: 10px;
+  }
+
+  .sidebar-footer {
+    margin-top: 12px;
+  }
+
+  .sidebar-logout {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+
+  /* Main content */
+  .main-content {
+    padding: 16px 12px;
   }
 
   .card {
-    padding: 20px 18px;
+    padding: 16px 14px;
+    margin-bottom: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .card h4 {
+    font-size: 1.05rem;
   }
 
   .input-group {
     flex-direction: column;
+    gap: 10px;
   }
 
   .input-group input,
@@ -1056,7 +1122,7 @@ hr {
   }
 
   .role-section h3 {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
   }
 
   .course-list-container {
@@ -1067,11 +1133,68 @@ hr {
     grid-template-columns: 1fr;
   }
 
+  /* Tables: horizontal scroll on mobile */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  thead, tbody, tr {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  th, td {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+
+  th {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+  }
+
   /* Report stats responsive */
   #report-summary-area > div:first-child {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 
+  #report-summary-area .card {
+    padding: 14px !important;
+  }
+
+  #report-summary-area .card div:first-child {
+    font-size: 0.65rem !important;
+  }
+
+  #report-summary-area .card div:last-child {
+    font-size: 1.4rem !important;
+  }
+
+  /* Buttons */
+  .action-btn {
+    padding: 11px 18px;
+    font-size: 0.88rem;
+    letter-spacing: 0.5px;
+  }
+
+  .secondary-btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  /* Modals */
+  .modal-content {
+    width: 94%;
+    max-width: 94% !important;
+    margin: 5vh auto !important;
+  }
+
+  /* Toast */
   .toast-container {
     top: 12px;
     right: 12px;
@@ -1082,21 +1205,178 @@ hr {
     min-width: unset;
     max-width: unset;
     width: 100%;
+    font-size: 0.85rem;
+    padding: 12px 16px;
+  }
+
+  /* Course detail modal */
+  .course-detail-modal {
+    width: 94%;
+    max-width: 94%;
+  }
+
+  .course-detail-modal-header {
+    padding: 16px 18px 14px;
+  }
+
+  .course-detail-modal-body {
+    padding: 14px 18px 18px;
+  }
+
+  .course-detail-table td {
+    padding: 10px 0;
+    font-size: 0.82rem;
+  }
+
+  .course-detail-table td:first-child {
+    font-size: 0.75rem;
+    width: 40%;
+  }
+
+  /* Report meta bar */
+  .card div[style*="display: flex"][style*="flex-wrap: wrap"][style*="gap: 20px"] {
+    gap: 10px !important;
+    font-size: 0.82rem !important;
+  }
+
+  /* Fix report generate button on mobile */
+  .input-group[style*="align-items: center"] {
+    flex-direction: column !important;
+  }
+
+  .input-group[style*="align-items: center"] .action-btn {
+    max-width: 100% !important;
+    width: 100%;
+  }
+
+  /* Camera box */
+  video {
+    max-width: 100%;
   }
 }
 
 @media (max-width: 480px) {
+  .dashboard-header {
+    padding: 12px;
+  }
+
   .dashboard-header h2 {
+    font-size: 0.95rem;
+  }
+
+  .sidebar {
+    padding: 12px 8px;
+  }
+
+  .sidebar-header {
+    margin-bottom: 10px;
+  }
+
+  .sidebar-logo {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+
+  .sidebar-header h2 {
     font-size: 1rem;
   }
 
+  .sidebar-role-badge {
+    font-size: 0.6rem;
+    padding: 2px 10px;
+  }
+
+  .nav-item {
+    font-size: 0.72rem;
+    padding: 6px 8px;
+    gap: 4px;
+  }
+
+  .main-content {
+    padding: 12px 8px;
+  }
+
   .card {
-    padding: 16px 14px;
+    padding: 14px 12px;
+    margin-bottom: 14px;
+  }
+
+  .card h4 {
+    font-size: 0.95rem;
+    gap: 6px;
   }
 
   .action-btn {
-    padding: 10px 18px;
-    font-size: 0.9rem;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    letter-spacing: 0.3px;
+  }
+
+  th, td {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  th {
+    font-size: 0.65rem;
+  }
+
+  .hint {
+    font-size: 0.8rem;
+  }
+
+  input[type="text"],
+  input[type="date"],
+  input[type="password"],
+  select {
+    padding: 10px 12px;
+    font-size: 0.88rem;
+  }
+
+  /* Pagination */
+  .pagination-controls {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch !important;
+    text-align: center;
+  }
+
+  .pagination-controls .secondary-btn {
+    width: 100%;
+  }
+
+  /* Report stat cards 2x2 */
+  #report-summary-area > div:first-child {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  #report-summary-area .card div:last-child {
+    font-size: 1.2rem !important;
+  }
+
+  /* Action icon buttons */
+  .action-icon {
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 1rem;
+    margin: 0 2px;
+  }
+
+  /* Course cards */
+  .course-card-header {
+    padding: 12px 14px;
+  }
+
+  .course-card-meta {
+    padding: 0 14px;
+  }
+
+  .course-card.expanded .course-card-meta {
+    padding: 0 14px 14px;
   }
 }
 

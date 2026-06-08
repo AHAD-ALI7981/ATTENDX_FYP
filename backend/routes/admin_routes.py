@@ -271,6 +271,39 @@ def get_classes(
         ))
     return result
 
+@router.get("/classes/{class_id}/students")
+def get_class_students(
+    class_id: int,
+    db: Session = Depends(get_db),
+    admin_user: dict = Depends(require_role("admin")),
+):
+    """Get all students assigned to a specific class."""
+    cls = db.query(Class).filter(Class.id == class_id).first()
+    if not cls:
+        raise HTTPException(404, "Class not found")
+
+    students = db.query(User).filter(
+        User.role == "student",
+        User.class_id == class_id
+    ).order_by(User.username).all()
+
+    result = []
+    for idx, s in enumerate(students, 1):
+        result.append({
+            "serial": idx,
+            "id": s.id,
+            "username": s.username,
+            "full_name": s.full_name or "-",
+        })
+
+    return {
+        "class_id": cls.class_id,
+        "class_name": cls.class_name,
+        "total_students": len(result),
+        "students": result,
+    }
+
+
 @router.delete("/classes/{class_id}")
 def delete_class(
     class_id: int,

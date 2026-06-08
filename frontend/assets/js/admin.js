@@ -576,8 +576,15 @@ async function loadClasses() {
             row.innerHTML = `
                 <td>${c.id}</td>
                 <td>${c.class_id}</td>
-                <td>${c.class_name}</td>
+                <td>
+                    <span style="cursor: pointer; color: var(--accent); text-decoration: underline; text-underline-offset: 3px;" onclick="viewClassStudents(${c.id})" title="Click to view students">${c.class_name}</span>
+                </td>
                 <td>${c.teacher_name || 'Unassigned'}</td>
+                <td>
+                    <button class="action-icon edit" onclick="viewClassStudents(${c.id})" title="View Students">
+                        <i class="ri-eye-line"></i>
+                    </button>
+                </td>
                 <td>
                     <button class="action-icon delete" onclick="deleteClass(${c.id})"><i class="ri-delete-bin-line"></i></button>
                 </td>
@@ -602,6 +609,80 @@ async function deleteClass(id) {
         alert("Server error deleting class.");
     }
 }
+
+
+// ==================== VIEW CLASS STUDENTS ====================
+
+async function viewClassStudents(classId) {
+    const modal = document.getElementById("class-students-modal");
+    const title = document.getElementById("class-students-title");
+    const badgeCode = document.getElementById("class-students-badge-code");
+    const badgeCount = document.getElementById("class-students-badge-count");
+    const tbody = document.querySelector("#class-students-table tbody");
+    const emptyState = document.getElementById("class-students-empty");
+    const table = document.getElementById("class-students-table");
+
+    // Show modal immediately with loading state
+    title.textContent = "Loading...";
+    badgeCode.textContent = "";
+    badgeCount.textContent = "";
+    tbody.innerHTML = "";
+    emptyState.classList.add("hidden");
+    table.classList.remove("hidden");
+    modal.classList.remove("hidden");
+
+    try {
+        const res = await apiFetch(`/api/admin/classes/${classId}/students`);
+        if (!res.ok) {
+            const err = await res.json();
+            alert(err.detail || "Failed to load students");
+            modal.classList.add("hidden");
+            return;
+        }
+
+        const data = await res.json();
+
+        title.textContent = data.class_name;
+        badgeCode.textContent = data.class_id;
+        badgeCount.textContent = `${data.total_students} Student${data.total_students !== 1 ? 's' : ''}`;
+
+        if (data.students.length === 0) {
+            table.classList.add("hidden");
+            emptyState.classList.remove("hidden");
+        } else {
+            table.classList.remove("hidden");
+            emptyState.classList.add("hidden");
+            data.students.forEach(s => {
+                const row = document.createElement("tr");
+                row.style.animation = `cascadeIn 0.35s ease-out ${s.serial * 0.04}s backwards`;
+                row.innerHTML = `
+                    <td style="font-weight: 600; color: var(--white-muted);">${s.serial}</td>
+                    <td style="font-weight: 600; color: var(--accent);">${s.username}</td>
+                    <td>${s.full_name}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    } catch (err) {
+        console.error("Failed to load class students:", err);
+        alert("Server error loading students.");
+        modal.classList.add("hidden");
+    }
+}
+
+// Close class students modal
+document.addEventListener("DOMContentLoaded", () => {
+    const closeBtn = document.getElementById("btn-close-class-students");
+    const modal = document.getElementById("class-students-modal");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => modal.classList.add("hidden"));
+    }
+    if (modal) {
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.classList.add("hidden");
+        });
+    }
+});
 
 
 // ==================== COURSE DEFINITION MANAGEMENT ====================
